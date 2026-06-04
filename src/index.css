@@ -1,0 +1,129 @@
+/* ============================================================
+   LatamPay — Estilos globales (Tailwind v4)
+   Paleta: "Confianza institucional"
+   ============================================================ */
+
+@import "tailwindcss";
+
+/* Modo oscuro por clase (<html class="dark">) */
+@custom-variant dark {
+  &:where(.dark, .dark *);
+}
+
+@theme {
+  /* ---- Colores de la paleta ---- */
+  --color-primary: #1A52E0;   /* primario */
+  --color-ink:     #0A2540;   /* tinta / texto */
+  --color-accent:  #14B8A6;   /* acento */
+  --color-canvas:  #EEF3FD;   /* fondo */
+
+  /* Matices del primario para hover y fondos suaves */
+  --color-primary-soft:  #EEF3FD;
+  --color-primary-hover: #1340B0;
+
+  /* ---- Colores semánticos (clave en una billetera) ---- */
+  --color-success: #16A34A;   /* ingresos */
+  --color-danger:  #DC2626;   /* egresos / errores */
+  --color-warning: #F59E0B;   /* advertencias */
+
+  /* ---- Tipografía ---- */
+  --font-sans: "Inter", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+  /* ---- Espaciado (base 4px; p-4 = 1rem) ---- */
+  --spacing: 0.25rem;
+
+  /* ---- Radios ---- */
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+
+  /* ---- Sombras ---- */
+  --shadow-card: 0 1px 3px rgba(10, 37, 64, 0.08);
+  --shadow-md:   0 4px 12px rgba(10, 37, 64, 0.10);
+  --shadow-focus: 0 0 0 3px rgba(26, 82, 224, 0.30);
+}
+
+/* Superficies que cambian con el tema */
+:root {
+  --bg-page:      var(--color-canvas);
+  --bg-surface:   #FFFFFF;
+  --text-primary: var(--color-ink);
+  --text-muted:   #4D586B;
+  --border:       #DCE1EA;
+}
+.dark {
+  --bg-page:      #0B1220;
+  --bg-surface:   #141A24;
+  --text-primary: #E8EDF5;
+  --text-muted:   #A9B4C6;
+  --border:       #232B38;
+}
+
+/* ---- Estilos base ---- */
+@layer base {
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background-color: var(--bg-page);
+    color: var(--text-primary);
+    font-family: var(--font-sans);
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    transition: background-color 0.2s ease, color 0.2s ease;
+  }
+
+  h1, h2, h3, h4 { margin: 0; font-weight: 600; line-height: 1.25; }
+  h1 { font-size: 1.875rem; }
+  h2 { font-size: 1.5rem; }
+  h3 { font-size: 1.25rem; }
+
+  a { color: var(--color-primary); text-decoration: none; }
+  a:hover { color: var(--color-primary-hover); }
+
+  :focus-visible {
+    outline: none;
+    box-shadow: var(--shadow-focus);
+    border-radius: var(--radius-md);
+  }
+
+  input, button, textarea, select { font-family: inherit; font-size: inherit; }
+
+  ::selection { background: var(--color-primary); color: #FFFFFF; }
+}
+
+/* ---- Componentes reutilizables ---- */
+@layer components {
+  .card {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-card);
+    padding: 1.25rem 1.5rem;
+  }
+
+  .btn-primary {
+    display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+    background: var(--color-primary); color: #FFFFFF; font-weight: 500;
+    padding: 0.625rem 1.25rem; border: none; border-radius: var(--radius-md);
+    cursor: pointer; transition: background 0.15s ease, transform 0.05s ease;
+  }
+  .btn-primary:hover  { background: var(--color-primary-hover); }
+  .btn-primary:active { transform: scale(0.98); }
+  .btn-primary:disabled { background: #C2CAD8; cursor: not-allowed; }
+
+  .input-field {
+    width: 100%; background: var(--bg-surface); color: var(--text-primary);
+    border: 1px solid var(--border); border-radius: var(--radius-md);
+    padding: 0.625rem 0.875rem; transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+  .input-field::placeholder { color: var(--text-muted); }
+  .input-field:focus { outline: none; border-color: var(--color-primary); box-shadow: var(--shadow-focus); }
+
+  /* Montos: ingreso / egreso */
+  .amount-in  { color: var(--color-success); font-weight: 500; }
+  .amount-out { color: var(--color-danger);  font-weight: 500; }
+}
