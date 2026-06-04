@@ -2,6 +2,9 @@ import React from 'react'
 
 export const Support = () => {
   return (
-    <div>Support</div>
+    <div>
+      <h1>Support</h1>
+      <p>This is the support page.</p>
+    </div>
   )
 }
