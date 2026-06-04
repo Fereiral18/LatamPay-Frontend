@@ -92,7 +92,7 @@ export const Home = () => {
             </h1>
 
             <p className="mt-6 max-w-xl text-lg text-slate-300">
-              Gestioná pesos argentinos, dólares y reales desde una sola
+              Gestioná pesos argentinos, colombianos y bolivares venezolanos desde una sola
               plataforma. Convertí monedas, enviá dinero y controlá tus
               finanzas en tiempo real.
             </p>
