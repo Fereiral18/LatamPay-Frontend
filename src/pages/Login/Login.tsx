@@ -55,7 +55,7 @@ export const Login = () => {
           className="flex justify-center"
         >
           <div className="w-full max-w-md rounded-3xl border border-cyan-500/20 bg-white/5 p-8 shadow-[0_0_50px_rgba(6,182,212,0.12)] backdrop-blur-xl">
-            <h2 className="text-2xl font-bold">Iniciar sesión</h2>
+            <h2 className="text-2xl font-bold">Inicia sesión</h2>
             <p className="mt-1 text-sm text-slate-400">
               Ingresá con tu email y contraseña.
             </p>
