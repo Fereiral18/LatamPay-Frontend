@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Eye, EyeOff } from "lucide-react";
 import type { FormProps, RegisterFormErrors, RegisterFormValues } from "../../types/formLogin_register.types";
 
 
@@ -39,6 +40,7 @@ export function Form({
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
 
   const runValidation = (next: RegisterFormValues): RegisterFormErrors => ({
     email: validateEmail(next.email),
@@ -145,21 +147,33 @@ export function Form({
         <label htmlFor="register-password" className="mb-1.5 block text-sm text-slate-300">
           Contraseña
         </label>
-        <input
-          id="register-password"
-          name="password"
-          type="password"
-          autoComplete="new-password"
-          placeholder="Mínimo 8 caracteres"
-          value={values.password}
-          onChange={handleChange("password")}
-          onBlur={handleBlur("password")}
-          aria-invalid={Boolean(errors.password && touched.password)}
-          aria-describedby={errors.password && touched.password ? "register-password-error" : undefined}
-          disabled={isSubmitting}
-          required
-          className={inputClass}
-        />
+        <div className="relative">
+          <input
+            id="register-password"
+            name="password"
+            type={showPassword ? "text" : "password"}
+            autoComplete="new-password"
+            placeholder="Mínimo 8 caracteres"
+            value={values.password}
+            onChange={handleChange("password")}
+            onBlur={handleBlur("password")}
+            aria-invalid={Boolean(errors.password && touched.password)}
+            aria-describedby={errors.password && touched.password ? "register-password-error" : undefined}
+            disabled={isSubmitting}
+            required
+            className={`${inputClass} pr-12`}
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword((prev) => !prev)}
+            disabled={isSubmitting}
+            aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+            aria-pressed={showPassword}
+            className="absolute inset-y-0 right-0 flex items-center px-3 text-slate-400 transition hover:text-cyan-400 focus:text-cyan-400 focus:outline-none disabled:opacity-50"
+          >
+            {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+          </button>
+        </div>
         {errors.password && touched.password && (
           <p id="register-password-error" role="alert" className="mt-1 text-xs text-red-400">
             {errors.password}
