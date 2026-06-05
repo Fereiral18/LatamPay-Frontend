@@ -1,11 +1,25 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useReducer,
+} from "react";
 import type { ReactNode } from "react";
 import { apiLogin, apiMe } from "../services/auth.api";
-import type { ApiUser } from "../services/auth.api";
+import { authStorage } from "../services/authStorage";
+import { authReducer } from "./reducer/auth.reducer";
+import { initialAuthState } from "./reducer/auth.initialState";
+import {
+  loginSuccess,
+  logoutAction,
+  sessionFailed,
+  sessionRestored,
+} from "./reducer/auth.actions";
+import type { AuthUser } from "./reducer/auth.types";
 
-const TOKEN_STORAGE_KEY = "latampay.auth.token";
-
-export type AuthUser = ApiUser;
+export type { AuthUser } from "./reducer/auth.types";
 
 export type AuthContextValue = {
   token: string | null;
@@ -23,53 +37,46 @@ type AuthProviderProps = {
 };
 
 export function AuthProvider({ children }: AuthProviderProps) {
-  const [token, setToken] = useState<string | null>(null);
-  const [user, setUser] = useState<AuthUser | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [state, dispatch] = useReducer(authReducer, initialAuthState);
 
   useEffect(() => {
-    const stored = localStorage.getItem(TOKEN_STORAGE_KEY);
+    const stored = authStorage.getToken();
     if (!stored) {
-      setIsLoading(false);
+      dispatch(sessionFailed());
       return;
     }
 
     apiMe(stored)
       .then((apiUser) => {
-        setToken(stored);
-        setUser(apiUser);
+        dispatch(sessionRestored(stored, apiUser));
       })
       .catch(() => {
-        localStorage.removeItem(TOKEN_STORAGE_KEY);
-        setToken(null);
-        setUser(null);
-      })
-      .finally(() => setIsLoading(false));
+        authStorage.clearToken();
+        dispatch(sessionFailed());
+      });
   }, []);
 
   const login = useCallback(async (email: string, password: string) => {
     const { user: apiUser, token: apiToken } = await apiLogin(email, password);
-    localStorage.setItem(TOKEN_STORAGE_KEY, apiToken);
-    setToken(apiToken);
-    setUser(apiUser);
+    authStorage.setToken(apiToken);
+    dispatch(loginSuccess(apiToken, apiUser));
   }, []);
 
   const logout = useCallback(() => {
-    localStorage.removeItem(TOKEN_STORAGE_KEY);
-    setToken(null);
-    setUser(null);
+    authStorage.clearToken();
+    dispatch(logoutAction());
   }, []);
 
   const value = useMemo<AuthContextValue>(
     () => ({
-      token,
-      user,
-      isAuthenticated: token !== null,
-      isLoading,
+      token: state.token,
+      user: state.user,
+      isAuthenticated: state.token !== null,
+      isLoading: state.isLoading,
       login,
       logout,
     }),
-    [token, user, isLoading, login, logout],
+    [state, login, logout],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
