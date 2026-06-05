@@ -1,12 +1,19 @@
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ShieldCheck, Wallet, TrendingUp, Users } from "lucide-react";
-import { Form } from "../../components/forms/Form";
+import { Eye, EyeOff, ShieldCheck, Wallet, TrendingUp, Users } from "lucide-react";
+
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+
 import { useAuth } from "../../context/AuthContext";
 import { paths } from "../../routes/paths";
-import type { FormSuccessPayload } from "../../types/formLogin_register.types";
+import { loginSchema } from "../../schemas/login.schema";
 
-const LOGIN_ENDPOINT = `${import.meta.env.VITE_API_URL ?? ""}/api/auth/login`;
+type LoginFormData = {
+  email: string;
+  password: string;
+};
 
 const quotes = [
   { pair: "USD / ARS", value: "$1.250" },
@@ -17,12 +24,33 @@ const quotes = [
 export const Login = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
+  const [showPassword, setShowPassword] = useState(false);
 
-  const handleSuccess = async ({ values }: FormSuccessPayload) => {
-    await login(values.email, values.password);
-    navigate(paths.dashboard, { replace: true });
+  const {
+    register,
+    handleSubmit,
+    setError,
+    formState: { errors, isSubmitting },
+  } = useForm<LoginFormData>({
+    resolver: zodResolver(loginSchema),
+    mode: "onChange",
+    reValidateMode: "onChange",
+  });
+
+  const onSubmit = async (data: LoginFormData) => {
+    try {
+      await login(data.email, data.password);
+
+      navigate(paths.dashboard, { replace: true });
+    } catch (error) {
+      setError("root", {
+        message:
+          error instanceof Error
+            ? error.message
+            : "Error inesperado al iniciar sesión",
+      });
+    }
   };
-
   return (
     <main className="relative min-h-screen overflow-hidden bg-slate-950 text-white">
       {/* Fondo animado */}
@@ -44,45 +72,89 @@ export const Login = () => {
         />
       </div>
 
-      {/* Layout dividido */}
-      <div className="relative z-10 container mx-auto grid min-h-screen items-center gap-10 px-8 pt-1 pb-16 lg:grid-cols-2">
-
-        {/* Panel izquierdo — formulario */}
+      <div className="relative z-10 container mx-auto grid min-h-screen items-center gap-10 px-8 pb-16 lg:grid-cols-2">
+        {/* LEFT FORM */}
         <motion.div
           initial={{ opacity: 0, y: 50 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
           className="flex justify-center"
         >
-          <div className="w-full max-w-md rounded-3xl border border-cyan-500/20 bg-white/5 p-8 shadow-[0_0_50px_rgba(6,182,212,0.12)] backdrop-blur-xl">
-            <h2 className="text-2xl font-bold">Iniciar sesión</h2>
+          <div className="w-full max-w-md rounded-3xl border border-cyan-500/20 bg-white/5 p-8 backdrop-blur-xl">
+            <h2 className="text-2xl font-bold">Inicia sesión</h2>
             <p className="mt-1 text-sm text-slate-400">
               Ingresá con tu email y contraseña.
             </p>
 
-            <Form
-              onSuccess={handleSuccess}
-              submitLabel="Ingresar"
-              endpoint={LOGIN_ENDPOINT}
-            />
+            {/* EMAIL */}
+            <div className="mt-6">
+              <label className="text-sm text-slate-300">Email</label>
+              <input
+                {...register("email")}
+                type="email"
+                placeholder="tu@email.com"
+                className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white"
+              />
+              {errors.email && (
+                <p className="mt-1 text-xs text-red-400">
+                  {errors.email.message}
+                </p>
+              )}
+            </div>
 
+            {/* PASSWORD */}
+            <div className="mt-4">
+              <label className="text-sm text-slate-300">Password</label>
+              <div className="relative">
+                <input
+                  {...register("password")}
+                  type={showPassword ? "text" : "password"}
+                  placeholder="••••••••"
+                  className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 pr-12 text-white"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  aria-label={
+                    showPassword ? "Ocultar contraseña" : "Mostrar contraseña"
+                  }
+                  className="absolute inset-y-0 right-3 flex items-center text-slate-400 transition hover:text-cyan-400"
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
+              {errors.password && (
+                <p className="mt-1 text-xs text-red-400">
+                  {errors.password.message}
+                </p>
+              )}
+            </div>
+
+            {/* SUBMIT */}
+            <button
+              onClick={handleSubmit(onSubmit)}
+              disabled={isSubmitting}
+              className="mt-6 w-full rounded-xl bg-cyan-500 py-3 font-semibold text-black disabled:opacity-50"
+            >
+              {isSubmitting ? "Ingresando..." : "Ingresar"}
+            </button>
+            {errors.root && (
+              <p className="mt-3 text-sm text-red-400 text-center">
+                {errors.root.message}
+              </p>
+            )}
             <p className="mt-6 text-center text-sm text-slate-400">
               ¿No tenés cuenta?{" "}
-              <Link
-                to={paths.register}
-                className="text-cyan-400 transition hover:text-cyan-300 hover:underline"
-              >
+              <Link to={paths.register} className="text-cyan-400">
                 Registrate gratis
               </Link>
             </p>
           </div>
         </motion.div>
 
-        {/* Panel derecho — info */}
+        {/* RIGHT INFO */}
         <motion.div
           initial={{ opacity: 0, x: 40 }}
           animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.6, delay: 0.15 }}
         >
           <div className="inline-flex items-center gap-2 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-4 py-2 text-sm text-cyan-400 backdrop-blur-md">
             <Wallet size={16} />
@@ -98,10 +170,9 @@ export const Login = () => {
 
           <p className="mt-6 max-w-md text-lg text-slate-300">
             Accedé a tu wallet y gestioná pesos argentinos, dólares y reales
-            desde una sola plataforma, en tiempo real.
+            desde una sola plataforma.
           </p>
 
-          {/* Cotizaciones */}
           <div className="mt-8 flex flex-wrap gap-4">
             {quotes.map((item) => (
               <div
@@ -114,7 +185,6 @@ export const Login = () => {
             ))}
           </div>
 
-          {/* Estadísticas */}
           <div className="mt-12 flex flex-wrap gap-10">
             <div>
               <div className="flex items-center gap-2">
@@ -123,6 +193,7 @@ export const Login = () => {
               </div>
               <p className="mt-1 text-slate-400">Usuarios activos</p>
             </div>
+
             <div>
               <div className="flex items-center gap-2">
                 <TrendingUp size={18} className="text-cyan-400" />
@@ -130,6 +201,7 @@ export const Login = () => {
               </div>
               <p className="mt-1 text-slate-400">Transacciones</p>
             </div>
+
             <div>
               <div className="flex items-center gap-2">
                 <ShieldCheck size={18} className="text-cyan-400" />
@@ -139,7 +211,6 @@ export const Login = () => {
             </div>
           </div>
         </motion.div>
-
       </div>
     </main>
   );

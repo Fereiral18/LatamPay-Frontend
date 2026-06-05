@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   ArrowLeftRight,
@@ -9,6 +10,7 @@ import {
   ArrowDownToLine,
   History,
 } from "lucide-react";
+import { paths } from "../../routes/paths";
 
 const features = [
   {
@@ -92,7 +94,7 @@ export const Home = () => {
             </h1>
 
             <p className="mt-6 max-w-xl text-lg text-slate-300">
-              Gestioná pesos argentinos, dólares y reales desde una sola
+              Gestioná pesos argentinos, colombianos y bolivares venezolanos desde una sola
               plataforma. Convertí monedas, enviá dinero y controlá tus
               finanzas en tiempo real.
             </p>
@@ -286,9 +288,12 @@ export const Home = () => {
             Creá una cuenta gratuita y gestioná múltiples monedas.
           </p>
 
-          <button className="mt-8 rounded-xl bg-cyan-500 px-8 py-4 font-semibold text-slate-950 transition hover:scale-105">
+          <Link
+            to={paths.register}
+            className="mt-8 inline-block rounded-xl bg-cyan-500 px-8 py-4 font-semibold text-slate-950 transition hover:scale-105"
+          >
             Crear Cuenta Gratis
-          </button>
+          </Link>
         </div>
       </section>
     </main>

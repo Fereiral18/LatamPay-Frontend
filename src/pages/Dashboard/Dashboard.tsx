@@ -1,12 +1,81 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
+import {
+  ArrowLeftRight,
+  ArrowDownToLine,
+  History,
+  Send,
+  TrendingUp,
+  Wallet,
+} from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
+import { TransferModal } from "../../components/transfer/TransferModal";
+
+const currencies = [
+  {
+    currency: "USD",
+    value: "$8,000",
+    color: "text-emerald-400",
+  },
+  {
+    currency: "ARS",
+    value: "$2.500.000",
+    color: "text-cyan-400",
+  },
+  {
+    currency: "BRL",
+    value: "R$12.000",
+    color: "text-yellow-400",
+  },
+];
+
+const transactions = [
+  {
+    title: "Compra USD",
+    amount: "+500 USD",
+  },
+  {
+    title: "Transferencia",
+    amount: "-200 USD",
+  },
+  {
+    title: "Recibido",
+    amount: "+150 USD",
+  },
+];
+
+type QuickAction = {
+  icon: typeof Send;
+  label: string;
+  onClick?: () => void;
+};
 
 export const Dashboard = () => {
   const { user } = useAuth();
+  const [isTransferOpen, setIsTransferOpen] = useState(false);
+
+  const quickActions: QuickAction[] = [
+    {
+      icon: Send,
+      label: "Enviar",
+      onClick: () => setIsTransferOpen(true),
+    },
+    {
+      icon: ArrowDownToLine,
+      label: "Recibir",
+    },
+    {
+      icon: ArrowLeftRight,
+      label: "Convertir",
+    },
+    {
+      icon: History,
+      label: "Historial",
+    },
+  ];
 
   return (
-    <section className="relative min-h-[calc(100vh-5rem)] overflow-hidden bg-slate-950 px-6 py-12">
-
+    <section className="relative min-h-[calc(100vh-5rem)] overflow-hidden bg-slate-950 px-6 py-12 text-white">
       {/* Fondo animado */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <motion.div
@@ -14,11 +83,13 @@ export const Dashboard = () => {
           transition={{ duration: 15, repeat: Infinity }}
           className="absolute -left-40 -top-40 h-96 w-96 rounded-full bg-cyan-500/15 blur-3xl"
         />
+
         <motion.div
           animate={{ x: [0, -80, 0], y: [0, 60, 0] }}
           transition={{ duration: 18, repeat: Infinity }}
-          className="absolute right-0 bottom-0 h-[500px] w-[500px] rounded-full bg-blue-600/15 blur-3xl"
+          className="absolute bottom-0 right-0 h-[500px] w-[500px] rounded-full bg-blue-600/15 blur-3xl"
         />
+
         <motion.div
           animate={{ scale: [1, 1.2, 1] }}
           transition={{ duration: 10, repeat: Infinity }}
@@ -26,45 +97,156 @@ export const Dashboard = () => {
         />
       </div>
 
-      <div className="relative z-10 container mx-auto max-w-4xl">
-
-        {/* Encabezado */}
+      <div className="relative z-10 container mx-auto max-w-6xl">
+        {/* Header */}
         <motion.div
-          initial={{ opacity: 0, y: -20 }}
+          initial={{ opacity: 0, y: -25 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <h1 className="text-4xl font-bold">
-            Bienvenido a{" "}
+          <h1 className="text-4xl font-bold md:text-5xl">
+            Bienvenido,
             <span className="bg-gradient-to-r from-cyan-400 via-blue-500 to-violet-500 bg-clip-text text-transparent">
-              LatamPay
+              {" "}
+              {user?.name ?? "Usuario"}
             </span>
           </h1>
+
           <p className="mt-2 text-slate-400">
-            Hola, {user?.email ?? "usuario"}.
+            {user?.email}
           </p>
         </motion.div>
 
-        {/* Tarjeta Tu cuenta */}
+        {/* Balance */}
         <motion.article
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.15 }}
-          className="mt-8 rounded-2xl border border-cyan-500/20 bg-white/5 p-6 shadow-[0_0_40px_rgba(6,182,212,0.08)] backdrop-blur-xl"
+          transition={{ delay: 0.15 }}
+          className="mt-8 rounded-3xl border border-cyan-500/20 bg-white/5 p-8 backdrop-blur-xl shadow-[0_0_50px_rgba(6,182,212,0.15)]"
         >
-          <h2 className="text-lg font-semibold text-white">Tu cuenta</h2>
+          <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+            <div>
+              <p className="text-slate-400">
+                Balance Total
+              </p>
 
-          <dl className="mt-4 divide-y divide-white/5">
-            <div className="flex items-center justify-between py-3">
-              <dt className="text-sm text-slate-400">Email</dt>
-              <dd className="text-sm font-medium text-white">
-                {user?.email ?? "—"}
-              </dd>
+              <h2 className="mt-2 text-5xl font-bold">
+                $12,450
+              </h2>
+
+              <div className="mt-3 flex items-center gap-2 text-emerald-400">
+                <TrendingUp size={18} />
+                <span>+12.4% este mes</span>
+              </div>
             </div>
-          </dl>
+
+            <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-cyan-500/10">
+              <Wallet
+                size={38}
+                className="text-cyan-400"
+              />
+            </div>
+          </div>
         </motion.article>
 
+        {/* Acciones rápidas */}
+        <motion.section
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.25 }}
+          className="mt-8"
+        >
+          <h2 className="mb-4 text-xl font-semibold">
+            Acciones rápidas
+          </h2>
+
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+            {quickActions.map((action) => {
+              const Icon = action.icon;
+
+              return (
+                <button
+                  key={action.label}
+                  type="button"
+                  onClick={action.onClick}
+                  disabled={!action.onClick}
+                  className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur-xl transition-all hover:border-cyan-500/40 hover:shadow-[0_0_30px_rgba(6,182,212,0.15)] disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  <Icon
+                    size={18}
+                    className="text-cyan-400"
+                  />
+
+                  <span>{action.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        </motion.section>
+
+        {/* Monedas */}
+        <motion.section
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.35 }}
+          className="mt-10"
+        >
+          <h2 className="mb-4 text-xl font-semibold">
+            Mis monedas
+          </h2>
+
+          <div className="grid gap-4 md:grid-cols-3">
+            {currencies.map((item) => (
+              <div
+                key={item.currency}
+                className="rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-xl"
+              >
+                <p className="text-slate-400">
+                  {item.currency}
+                </p>
+
+                <p
+                  className={`mt-2 text-3xl font-bold ${item.color}`}
+                >
+                  {item.value}
+                </p>
+              </div>
+            ))}
+          </div>
+        </motion.section>
+
+        {/* Movimientos */}
+        <motion.section
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.45 }}
+          className="mt-10"
+        >
+          <h2 className="mb-4 text-xl font-semibold">
+            Últimos movimientos
+          </h2>
+
+          <div className="space-y-4">
+            {transactions.map((tx) => (
+              <div
+                key={`${tx.title}-${tx.amount}`}
+                className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur-xl"
+              >
+                <span>{tx.title}</span>
+
+                <span className="font-semibold text-cyan-400">
+                  {tx.amount}
+                </span>
+              </div>
+            ))}
+          </div>
+        </motion.section>
       </div>
+
+      <TransferModal
+        open={isTransferOpen}
+        onClose={() => setIsTransferOpen(false)}
+      />
     </section>
   );
 };

@@ -6,7 +6,9 @@ export type NavItem = {
 };
 
 export const privateNavItems: NavItem[] = [
-  { label: "Dashboard", path: paths.dashboard },
+  { label: "Cuenta", path: paths.dashboard },
+  { label: "Servicios", path: paths.services },
+  { label: "Más", path: paths.more },
 ];
 
 

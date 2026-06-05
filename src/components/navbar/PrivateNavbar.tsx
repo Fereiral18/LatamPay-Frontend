@@ -53,7 +53,7 @@ export function PrivateNavbar({
 
         {/* Desktop user */}
         <div className="hidden items-center gap-4 md:flex">
-          <span className="text-sm text-slate-400">{user?.email}</span>
+          <span className="text-sm text-slate-400">{user?.name}</span>
           <button
             type="button"
             onClick={logout}

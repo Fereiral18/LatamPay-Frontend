@@ -4,6 +4,8 @@ import { Home } from "../pages/Home/Home";
 import { Login } from "../pages/Login/Login";
 import { Register } from "../pages/Register/Register";
 import { Dashboard } from "../pages/Dashboard/Dashboard";
+import { Services } from "../pages/services/Services";
+import { More } from "../pages/more/More";
 import { NotFound } from "../pages/NotFound/NotFound";
 import { PrivateLayout } from "../layouts/PrivateLayout";
 import { PrivateRoute } from "./guards/PrivateRoute";
@@ -30,6 +32,8 @@ export function AppRouter() {
           <Route element={<PrivateRoute />}>
             <Route element={<PrivateLayout />}>
               <Route path={paths.dashboard} element={<Dashboard />} />
+              <Route path={paths.services} element={<Services />} />
+              <Route path={paths.more} element={<More />} />
             </Route>
           </Route>
 

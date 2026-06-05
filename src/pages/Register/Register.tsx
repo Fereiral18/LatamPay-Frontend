@@ -1,19 +1,22 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ShieldCheck, Wallet, ArrowLeftRight, TrendingUp, Users, Zap } from "lucide-react";
-import { Form } from "../../components/forms/Form";
-import { useAuth } from "../../context/AuthContext";
-import { paths } from "../../routes/paths";
-import type { FormSuccessPayload } from "../../types/formLogin_register.types";
+import {
+  ShieldCheck,
+  Wallet,
+  ArrowLeftRight,
+  Zap,
+  Eye,
+  EyeOff,
+} from "lucide-react";
 
-function validateName(value: string): string | undefined {
-  const trimmed = value.trim();
-  if (!trimmed) return "El nombre es obligatorio.";
-  if (trimmed.length < 2) return "Debe tener al menos 2 caracteres.";
-  if (trimmed.length > 100) return "El nombre es demasiado largo.";
-  return undefined;
-}
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+
+import { paths } from "../../routes/paths";
+import { apiRegister } from "../../services/auth.api";
+import { registerSchema } from "../../schemas/register.schema";
 
 const perks = [
   { icon: ShieldCheck, label: "Seguridad bancaria" },
@@ -22,21 +25,31 @@ const perks = [
   { icon: Zap, label: "Transferencias al instante" },
 ];
 
+type RegisterFormData = z.infer<typeof registerSchema>;
+
 export const Register = () => {
-  const { login } = useAuth();
   const navigate = useNavigate();
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  const [name, setName] = useState("");
-  const [nameTouched, setNameTouched] = useState(false);
-  const nameError = validateName(name);
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<RegisterFormData>({
+    resolver: zodResolver(registerSchema),
+    mode: "onChange",
+  });
 
-  const handleSuccess = async ({ values }: FormSuccessPayload) => {
-    await login(values.email, values.password);
-    navigate(paths.dashboard, { replace: true });
+  const onSubmit = async (data: RegisterFormData) => {
+    await apiRegister(data.name, data.email, data.password);
+
+    navigate(paths.login, { replace: true });
   };
 
   return (
     <main className="relative min-h-screen overflow-hidden bg-slate-950 text-white">
+
       {/* Fondo animado */}
       <div className="absolute inset-0 overflow-hidden">
         <motion.div
@@ -56,14 +69,12 @@ export const Register = () => {
         />
       </div>
 
-      {/* Layout dividido */}
-      <div className="relative z-10 container mx-auto grid min-h-screen items-center gap-10 px-8 pt-1 pb-16 lg:grid-cols-2">
+      <div className="relative z-10 container mx-auto grid min-h-screen items-center gap-10 px-8 pb-16 lg:grid-cols-2">
 
-        {/* Panel izquierdo */}
+        {/* LEFT */}
         <motion.div
           initial={{ opacity: 0, x: -40 }}
           animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.6 }}
         >
           <div className="inline-flex items-center gap-2 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-4 py-2 text-sm text-cyan-400 backdrop-blur-md">
             <Wallet size={16} />
@@ -82,104 +93,150 @@ export const Register = () => {
             dólares y reales desde una sola plataforma.
           </p>
 
-          {/* Perks */}
           <div className="mt-8 grid grid-cols-2 gap-3">
             {perks.map(({ icon: Icon, label }) => (
               <div
                 key={label}
                 className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-300 backdrop-blur-xl"
               >
-                <Icon size={16} className="text-cyan-400 shrink-0" />
+                <Icon size={16} className="text-cyan-400" />
                 {label}
               </div>
             ))}
           </div>
-
-          {/* Estadísticas */}
-          <div className="mt-12 flex flex-wrap gap-10">
-            <div>
-              <div className="flex items-center gap-2">
-                <Users size={18} className="text-cyan-400" />
-                <h3 className="text-3xl font-bold">50K+</h3>
-              </div>
-              <p className="mt-1 text-slate-400">Usuarios activos</p>
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <TrendingUp size={18} className="text-cyan-400" />
-                <h3 className="text-3xl font-bold">1M+</h3>
-              </div>
-              <p className="mt-1 text-slate-400">Transacciones</p>
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <ShieldCheck size={18} className="text-cyan-400" />
-                <h3 className="text-3xl font-bold">99.9%</h3>
-              </div>
-              <p className="mt-1 text-slate-400">Disponibilidad</p>
-            </div>
-          </div>
         </motion.div>
 
-        {/* Panel derecho — formulario */}
+        {/* RIGHT - FORM */}
         <motion.div
           initial={{ opacity: 0, y: 50 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.15 }}
           className="flex justify-center"
         >
-          <div className="w-full max-w-md rounded-3xl border border-cyan-500/20 bg-white/5 p-8 shadow-[0_0_50px_rgba(6,182,212,0.12)] backdrop-blur-xl">
+          <form
+            onSubmit={handleSubmit(onSubmit)}
+            className="w-full max-w-md rounded-3xl border border-cyan-500/20 bg-white/5 p-8 backdrop-blur-xl"
+          >
             <h2 className="text-2xl font-bold">Crear cuenta</h2>
             <p className="mt-1 text-sm text-slate-400">
               Completá los datos para comenzar.
             </p>
 
-            <Form
-              onSuccess={handleSuccess}
-              submitLabel="Registrarme"
-              extraValues={{ name: name.trim() }}
-              disableSubmit={Boolean(nameError)}
-            >
-              {/* Campo nombre */}
-              <div className="mt-6">
-                <label
-                  htmlFor="register-name"
-                  className="mb-1.5 block text-sm text-slate-300"
-                >
-                  Nombre
-                </label>
+            {/* NAME */}
+            <div className="mt-6">
+              <label className="mb-1.5 block text-sm text-slate-300">
+                Nombre
+              </label>
+              <input
+                {...register("name")}
+                type="text"
+                placeholder="Tu nombre completo"
+                className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white"
+              />
+              {errors.name && (
+                <p className="text-sm text-red-400 mt-1">
+                  {errors.name.message}
+                </p>
+              )}
+            </div>
+
+            {/* EMAIL */}
+            <div className="mt-4">
+              <label className="mb-1.5 block text-sm text-slate-300">
+                Email
+              </label>
+              <input
+                {...register("email")}
+                type="email"
+                placeholder="correo@ejemplo.com"
+                className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white"
+              />
+              {errors.email && (
+                <p className="text-sm text-red-400 mt-1">
+                  {errors.email.message}
+                </p>
+              )}
+            </div>
+
+            {/* PASSWORD */}
+            <div className="mt-4">
+              <label className="mb-1.5 block text-sm text-slate-300">
+                Password
+              </label>
+              <div className="relative">
                 <input
-                  id="register-name"
-                  name="name"
-                  type="text"
-                  autoComplete="name"
-                  placeholder="Tu nombre completo"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  onBlur={() => setNameTouched(true)}
-                  aria-invalid={Boolean(nameError && nameTouched)}
-                  aria-describedby={nameError && nameTouched ? "register-name-error" : undefined}
-                  required
-                  className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder-slate-500 backdrop-blur-xl transition focus:border-cyan-500/50 focus:outline-none focus:ring-1 focus:ring-cyan-500/30"
+                  {...register("password")}
+                  type={showPassword ? "text" : "password"}
+                  placeholder="••••••••"
+                  className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 pr-12 text-white"
                 />
-                {nameError && nameTouched && (
-                  <p id="register-name-error" role="alert" className="mt-1 text-xs text-red-400">
-                    {nameError}
-                  </p>
-                )}
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  aria-label={
+                    showPassword ? "Ocultar contraseña" : "Mostrar contraseña"
+                  }
+                  className="absolute inset-y-0 right-3 flex items-center text-slate-400 transition hover:text-cyan-400"
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
               </div>
-            </Form>
+              {errors.password && (
+                <p className="text-sm text-red-400 mt-1">
+                  {errors.password.message}
+                </p>
+              )}
+            </div>
+
+            {/* CONFIRM PASSWORD */}
+            <div className="mt-4">
+              <label className="mb-1.5 block text-sm text-slate-300">
+                Confirmar password
+              </label>
+              <div className="relative">
+                <input
+                  {...register("confirmPassword")}
+                  type={showConfirmPassword ? "text" : "password"}
+                  placeholder="••••••••"
+                  className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 pr-12 text-white"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword((v) => !v)}
+                  aria-label={
+                    showConfirmPassword
+                      ? "Ocultar contraseña"
+                      : "Mostrar contraseña"
+                  }
+                  className="absolute inset-y-0 right-3 flex items-center text-slate-400 transition hover:text-cyan-400"
+                >
+                  {showConfirmPassword ? (
+                    <EyeOff size={18} />
+                  ) : (
+                    <Eye size={18} />
+                  )}
+                </button>
+              </div>
+              {errors.confirmPassword && (
+                <p className="text-sm text-red-400 mt-1">
+                  {errors.confirmPassword.message}
+                </p>
+              )}
+            </div>
+
+            <button
+              disabled={isSubmitting}
+              className="mt-6 w-full rounded-xl bg-cyan-500 py-3 font-semibold text-black disabled:opacity-50"
+            >
+              {isSubmitting ? "Creando..." : "Crear cuenta"}
+            </button>
 
             <p className="mt-6 text-center text-sm text-slate-400">
               ¿Ya tenés cuenta?{" "}
-              <Link
-                to={paths.login}
-                className="text-cyan-400 transition hover:text-cyan-300 hover:underline"
-              >
+              <Link to={paths.login} className="text-cyan-400">
                 Iniciar sesión
               </Link>
             </p>
-          </div>
+          </form>
         </motion.div>
       </div>
     </main>
