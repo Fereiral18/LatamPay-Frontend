@@ -1,6 +1,7 @@
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ShieldCheck, Wallet, TrendingUp, Users } from "lucide-react";
+import { Eye, EyeOff, ShieldCheck, Wallet, TrendingUp, Users } from "lucide-react";
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -23,6 +24,7 @@ const quotes = [
 export const Login = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
+  const [showPassword, setShowPassword] = useState(false);
 
   const {
     register,
@@ -102,12 +104,24 @@ export const Login = () => {
             {/* PASSWORD */}
             <div className="mt-4">
               <label className="text-sm text-slate-300">Password</label>
-              <input
-                {...register("password")}
-                type="password"
-                placeholder="••••••••"
-                className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white"
-              />
+              <div className="relative">
+                <input
+                  {...register("password")}
+                  type={showPassword ? "text" : "password"}
+                  placeholder="••••••••"
+                  className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 pr-12 text-white"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  aria-label={
+                    showPassword ? "Ocultar contraseña" : "Mostrar contraseña"
+                  }
+                  className="absolute inset-y-0 right-3 flex items-center text-slate-400 transition hover:text-cyan-400"
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
               {errors.password && (
                 <p className="mt-1 text-xs text-red-400">
                   {errors.password.message}

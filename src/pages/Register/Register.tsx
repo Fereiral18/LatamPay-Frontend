@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
@@ -5,6 +6,8 @@ import {
   Wallet,
   ArrowLeftRight,
   Zap,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 
 import { useForm } from "react-hook-form";
@@ -26,6 +29,8 @@ type RegisterFormData = z.infer<typeof registerSchema>;
 
 export const Register = () => {
   const navigate = useNavigate();
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const {
     register,
@@ -157,12 +162,24 @@ export const Register = () => {
               <label className="mb-1.5 block text-sm text-slate-300">
                 Password
               </label>
-              <input
-                {...register("password")}
-                type="password"
-                placeholder="••••••••"
-                className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white"
-              />
+              <div className="relative">
+                <input
+                  {...register("password")}
+                  type={showPassword ? "text" : "password"}
+                  placeholder="••••••••"
+                  className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 pr-12 text-white"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  aria-label={
+                    showPassword ? "Ocultar contraseña" : "Mostrar contraseña"
+                  }
+                  className="absolute inset-y-0 right-3 flex items-center text-slate-400 transition hover:text-cyan-400"
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
               {errors.password && (
                 <p className="text-sm text-red-400 mt-1">
                   {errors.password.message}
@@ -175,12 +192,30 @@ export const Register = () => {
               <label className="mb-1.5 block text-sm text-slate-300">
                 Confirmar password
               </label>
-              <input
-                {...register("confirmPassword")}
-                type="password"
-                placeholder="••••••••"
-                className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white"
-              />
+              <div className="relative">
+                <input
+                  {...register("confirmPassword")}
+                  type={showConfirmPassword ? "text" : "password"}
+                  placeholder="••••••••"
+                  className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 pr-12 text-white"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword((v) => !v)}
+                  aria-label={
+                    showConfirmPassword
+                      ? "Ocultar contraseña"
+                      : "Mostrar contraseña"
+                  }
+                  className="absolute inset-y-0 right-3 flex items-center text-slate-400 transition hover:text-cyan-400"
+                >
+                  {showConfirmPassword ? (
+                    <EyeOff size={18} />
+                  ) : (
+                    <Eye size={18} />
+                  )}
+                </button>
+              </div>
               {errors.confirmPassword && (
                 <p className="text-sm text-red-400 mt-1">
                   {errors.confirmPassword.message}
