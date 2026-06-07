@@ -14,7 +14,6 @@ export type ConfirmStepProps = {
   password: string;
   showPassword: boolean;
   isVerifying: boolean;
-  error: string | null;
   onPasswordChange: (value: string) => void;
   onToggleShowPassword: () => void;
   onBack: () => void;
@@ -29,7 +28,6 @@ export const ConfirmStep = ({
   password,
   showPassword,
   isVerifying,
-  error,
   onPasswordChange,
   onToggleShowPassword,
   onBack,
@@ -106,8 +104,6 @@ export const ConfirmStep = ({
             {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
           </button>
         </div>
-
-        {error && <p className="mt-3 text-sm text-red-400">{error}</p>}
 
         <div className="mt-6 grid grid-cols-2 gap-3">
           <button

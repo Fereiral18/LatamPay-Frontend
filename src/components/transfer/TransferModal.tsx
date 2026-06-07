@@ -1,5 +1,6 @@
 import { useEffect, useReducer } from "react";
 import type { FormEvent } from "react";
+import { toast } from "sonner";
 import { Modal } from "../ui/Modal";
 import { useAuth } from "../../context/AuthContext";
 import {
@@ -10,6 +11,7 @@ import {
   validateDraft,
   validatePassword,
 } from "../../services/transfer/validation";
+import { formatAmount } from "../../services/transfer/format";
 import { FormStep } from "./steps/FormStep";
 import { ConfirmStep } from "./steps/ConfirmStep";
 import { SuccessStep } from "./steps/SuccessStep";
@@ -25,7 +27,10 @@ export const TransferModal = ({ open, onClose }: TransferModalProps) => {
 
   // Reset al abrir
   useEffect(() => {
-    if (open) dispatch({ type: "RESET" });
+    if (open) {
+      dispatch({ type: "RESET" });
+      toast.dismiss();
+    }
   }, [open]);
 
   const onFormSubmit = (e: FormEvent<HTMLFormElement>) => {
@@ -36,7 +41,7 @@ export const TransferModal = ({ open, onClose }: TransferModalProps) => {
       reason: state.reason,
     });
     if (!result.ok) {
-      dispatch({ type: "SET_ERROR", payload: result.error });
+      toast.error(result.error);
       return;
     }
     dispatch({ type: "GO_TO_CONFIRM" });
@@ -46,20 +51,32 @@ export const TransferModal = ({ open, onClose }: TransferModalProps) => {
     e.preventDefault();
     const result = validatePassword(state.password);
     if (!result.ok) {
-      dispatch({ type: "SET_ERROR", payload: result.error });
+      toast.error(result.error);
       return;
     }
 
     dispatch({ type: "VERIFY_START" });
-    const ok = await verifyPassword(state.password);
-    if (!ok) {
-      dispatch({
-        type: "VERIFY_FAIL",
-        payload: "La contraseña no coincide con la de tu cuenta.",
-      });
-      return;
+    const verifyToastId = toast.loading("Verificando contraseña...");
+    try {
+      const ok = await verifyPassword(state.password);
+      toast.dismiss(verifyToastId);
+      if (!ok) {
+        const message = "La contraseña no coincide con la de tu cuenta.";
+        dispatch({ type: "VERIFY_FAIL", payload: message });
+        toast.error(message);
+        return;
+      }
+      dispatch({ type: "VERIFY_SUCCESS" });
+      toast.success(
+        `Enviaste $${formatAmount(state.amount)} a ${state.destination}.`,
+        { description: "Transferencia confirmada." },
+      );
+    } catch {
+      toast.dismiss(verifyToastId);
+      const message = "Ocurrió un error al verificar. Intentalo de nuevo.";
+      dispatch({ type: "VERIFY_FAIL", payload: message });
+      toast.error(message);
     }
-    dispatch({ type: "VERIFY_SUCCESS" });
   };
 
   return (
@@ -69,7 +86,6 @@ export const TransferModal = ({ open, onClose }: TransferModalProps) => {
           destination={state.destination}
           amount={state.amount}
           reason={state.reason}
-          error={state.error}
           onChange={(patch) =>
             dispatch({ type: "UPDATE_FORM", payload: patch })
           }
@@ -86,7 +102,6 @@ export const TransferModal = ({ open, onClose }: TransferModalProps) => {
           password={state.password}
           showPassword={state.showPassword}
           isVerifying={state.isVerifying}
-          error={state.error}
           onPasswordChange={(value) =>
             dispatch({ type: "SET_PASSWORD", payload: value })
           }

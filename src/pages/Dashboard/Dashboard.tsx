@@ -3,46 +3,19 @@ import { motion } from "framer-motion";
 import {
   ArrowLeftRight,
   ArrowDownToLine,
+  Coins,
   History,
+  Inbox,
   Send,
   TrendingUp,
   Wallet,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { TransferModal } from "../../components/transfer/TransferModal";
-
-const currencies = [
-  {
-    currency: "USD",
-    value: "$8,000",
-    color: "text-emerald-400",
-  },
-  {
-    currency: "ARS",
-    value: "$2.500.000",
-    color: "text-cyan-400",
-  },
-  {
-    currency: "BRL",
-    value: "R$12.000",
-    color: "text-yellow-400",
-  },
-];
-
-const transactions = [
-  {
-    title: "Compra USD",
-    amount: "+500 USD",
-  },
-  {
-    title: "Transferencia",
-    amount: "-200 USD",
-  },
-  {
-    title: "Recibido",
-    amount: "+150 USD",
-  },
-];
+import { DashboardSkeleton } from "../../components/dashboard/DashboardSkeleton";
+import { EmptyState } from "../../components/ui/EmptyState";
+import { ErrorState } from "../../components/ui/ErrorState";
+import { useDashboardData } from "../../hooks/useDashboardData";
 
 type QuickAction = {
   icon: typeof Send;
@@ -53,6 +26,7 @@ type QuickAction = {
 export const Dashboard = () => {
   const { user } = useAuth();
   const [isTransferOpen, setIsTransferOpen] = useState(false);
+  const { data, isLoading, isError, refetch } = useDashboardData();
 
   const quickActions: QuickAction[] = [
     {
@@ -73,6 +47,24 @@ export const Dashboard = () => {
       label: "Historial",
     },
   ];
+
+  if (isLoading) return <DashboardSkeleton />;
+
+  if (isError || !data) {
+    return (
+      <section className="relative min-h-[calc(100vh-5rem)] overflow-hidden bg-slate-950 px-6 py-12 text-white">
+        <div className="relative z-10 container mx-auto max-w-2xl pt-16">
+          <ErrorState
+            title="No pudimos cargar tu dashboard"
+            description="Revisá tu conexión e intentá de nuevo."
+            onRetry={refetch}
+          />
+        </div>
+      </section>
+    );
+  }
+
+  const { totalBalance, trend, currencies, transactions } = data;
 
   return (
     <section className="relative min-h-[calc(100vh-5rem)] overflow-hidden bg-slate-950 px-6 py-12 text-white">
@@ -131,12 +123,12 @@ export const Dashboard = () => {
               </p>
 
               <h2 className="mt-2 text-5xl font-bold">
-                $12,450
+                {totalBalance}
               </h2>
 
               <div className="mt-3 flex items-center gap-2 text-emerald-400">
                 <TrendingUp size={18} />
-                <span>+12.4% este mes</span>
+                <span>{trend}</span>
               </div>
             </div>
 
@@ -195,24 +187,32 @@ export const Dashboard = () => {
             Mis monedas
           </h2>
 
-          <div className="grid gap-4 md:grid-cols-3">
-            {currencies.map((item) => (
-              <div
-                key={item.currency}
-                className="rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-xl"
-              >
-                <p className="text-slate-400">
-                  {item.currency}
-                </p>
-
-                <p
-                  className={`mt-2 text-3xl font-bold ${item.color}`}
+          {currencies.length === 0 ? (
+            <EmptyState
+              icon={Coins}
+              title="Todavía no tenés monedas"
+              description="Cuando agregues fondos a tu cuenta vas a verlos acá."
+            />
+          ) : (
+            <div className="grid gap-4 md:grid-cols-3">
+              {currencies.map((item) => (
+                <div
+                  key={item.currency}
+                  className="rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-xl"
                 >
-                  {item.value}
-                </p>
-              </div>
-            ))}
-          </div>
+                  <p className="text-slate-400">
+                    {item.currency}
+                  </p>
+
+                  <p
+                    className={`mt-2 text-3xl font-bold ${item.color}`}
+                  >
+                    {item.value}
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
         </motion.section>
 
         {/* Movimientos */}
@@ -226,20 +226,28 @@ export const Dashboard = () => {
             Últimos movimientos
           </h2>
 
-          <div className="space-y-4">
-            {transactions.map((tx) => (
-              <div
-                key={`${tx.title}-${tx.amount}`}
-                className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur-xl"
-              >
-                <span>{tx.title}</span>
+          {transactions.length === 0 ? (
+            <EmptyState
+              icon={Inbox}
+              title="Sin movimientos aún"
+              description="Tus transferencias y pagos van a aparecer acá."
+            />
+          ) : (
+            <div className="space-y-4">
+              {transactions.map((tx) => (
+                <div
+                  key={`${tx.title}-${tx.amount}`}
+                  className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur-xl"
+                >
+                  <span>{tx.title}</span>
 
-                <span className="font-semibold text-cyan-400">
-                  {tx.amount}
-                </span>
-              </div>
-            ))}
-          </div>
+                  <span className="font-semibold text-cyan-400">
+                    {tx.amount}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
         </motion.section>
       </div>
 

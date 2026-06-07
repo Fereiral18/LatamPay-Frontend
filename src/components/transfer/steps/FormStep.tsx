@@ -10,7 +10,6 @@ export type FormStepProps = {
   destination: string;
   amount: string;
   reason: TransferReason;
-  error: string | null;
   onChange: (patch: Partial<TransferFormFields>) => void;
   onSubmit: (e: FormEvent<HTMLFormElement>) => void;
 };
@@ -19,7 +18,6 @@ export const FormStep = ({
   destination,
   amount,
   reason,
-  error,
   onChange,
   onSubmit,
 }: FormStepProps) => (
@@ -97,8 +95,6 @@ export const FormStep = ({
           </select>
         </div>
       </div>
-
-      {error && <p className="mt-3 text-sm text-red-400">{error}</p>}
 
       <button
         type="submit"
