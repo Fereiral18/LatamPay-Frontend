@@ -3,6 +3,7 @@ import type { FormEvent } from "react";
 import { toast } from "sonner";
 import { Modal } from "../ui/Modal";
 import { useAuth } from "../../context/AuthContext";
+import { useWallet } from "../../context/WalletContext";
 import {
   initialTransferState,
   transferReducer,
@@ -16,6 +17,9 @@ import { FormStep } from "./steps/FormStep";
 import { ConfirmStep } from "./steps/ConfirmStep";
 import { SuccessStep } from "./steps/SuccessStep";
 
+const parseAmount = (raw: string): number =>
+  Number(raw.replace(",", "."));
+
 export type TransferModalProps = {
   open: boolean;
   onClose: () => void;
@@ -23,6 +27,7 @@ export type TransferModalProps = {
 
 export const TransferModal = ({ open, onClose }: TransferModalProps) => {
   const { user, verifyPassword } = useAuth();
+  const { balance, canAfford, transfer } = useWallet();
   const [state, dispatch] = useReducer(transferReducer, initialTransferState);
 
   // Reset al abrir
@@ -44,6 +49,15 @@ export const TransferModal = ({ open, onClose }: TransferModalProps) => {
       toast.error(result.error);
       return;
     }
+
+    const amountNum = parseAmount(state.amount);
+    if (!canAfford(amountNum)) {
+      toast.error("Saldo insuficiente.", {
+        description: `Disponible: $${formatAmount(String(balance))}.`,
+      });
+      return;
+    }
+
     dispatch({ type: "GO_TO_CONFIRM" });
   };
 
@@ -66,6 +80,22 @@ export const TransferModal = ({ open, onClose }: TransferModalProps) => {
         toast.error(message);
         return;
       }
+
+      const amountNum = parseAmount(state.amount);
+      const success = transfer({
+        amount: amountNum,
+        destination: state.destination,
+        reason: state.reason || undefined,
+      });
+      if (!success) {
+        const message = "Saldo insuficiente.";
+        dispatch({ type: "VERIFY_FAIL", payload: message });
+        toast.error(message, {
+          description: `Disponible: $${formatAmount(String(balance))}.`,
+        });
+        return;
+      }
+
       dispatch({ type: "VERIFY_SUCCESS" });
       toast.success(
         `Enviaste $${formatAmount(state.amount)} a ${state.destination}.`,

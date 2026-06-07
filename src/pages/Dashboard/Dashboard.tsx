@@ -11,6 +11,8 @@ import {
   Wallet,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
+import { useWallet } from "../../context/WalletContext";
+import { formatAmount } from "../../services/transfer/format";
 import { TransferModal } from "../../components/transfer/TransferModal";
 import { DashboardSkeleton } from "../../components/dashboard/DashboardSkeleton";
 import { CurrencyCard } from "../../components/dashboard/CurrencyCard";
@@ -26,8 +28,22 @@ type QuickAction = {
   onClick?: () => void;
 };
 
+const dateFormatter = new Intl.DateTimeFormat("es-AR", {
+  day: "2-digit",
+  month: "2-digit",
+  hour: "2-digit",
+  minute: "2-digit",
+});
+
+const formatTransactionDate = (iso: string): string => {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return "";
+  return dateFormatter.format(date);
+};
+
 export const Dashboard = () => {
   const { user } = useAuth();
+  const { balance, transactions } = useWallet();
   const [isTransferOpen, setIsTransferOpen] = useState(false);
   const { data, isLoading, isError, refetch } = useDashboardData();
 
@@ -54,7 +70,8 @@ export const Dashboard = () => {
     );
   }
 
-  const { totalBalance, trend, currencies, transactions } = data;
+  const { trend, currencies } = data;
+  const totalBalance = `$${formatAmount(String(balance))}`;
 
   return (
     <section className="relative min-h-[calc(100vh-5rem)] overflow-hidden bg-slate-950 px-6 py-12 text-white">
@@ -201,9 +218,10 @@ export const Dashboard = () => {
             <div className="space-y-4">
               {transactions.map((tx) => (
                 <TransactionRow
-                  key={`${tx.title}-${tx.amount}`}
+                  key={tx.id}
                   title={tx.title}
                   amount={tx.amount}
+                  date={formatTransactionDate(tx.createdAt)}
                 />
               ))}
             </div>
