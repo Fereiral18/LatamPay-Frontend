@@ -38,7 +38,6 @@ const features = [
     description: "Monitoreá tu actividad financiera.",
   },
 ];
-
 const transactions = [
   {
     title: "Compra USD",
