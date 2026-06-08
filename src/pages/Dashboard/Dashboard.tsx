@@ -5,7 +5,6 @@ import {
   ArrowDownToLine,
   Coins,
   History,
-  Inbox,
   Send,
   TrendingUp,
   Wallet,
@@ -16,7 +15,7 @@ import { formatAmount } from "../../services/transfer/format";
 import { TransferModal } from "../../components/transfer/TransferModal";
 import { DashboardSkeleton } from "../../components/dashboard/DashboardSkeleton";
 import { CurrencyCard } from "../../components/dashboard/CurrencyCard";
-import { TransactionRow } from "../../components/dashboard/TransactionRow";
+import { TransactionHistory } from "../../components/transactions/TransactionHistory";
 import { Card } from "../../components/ui/Card";
 import { EmptyState } from "../../components/ui/EmptyState";
 import { ErrorState } from "../../components/ui/ErrorState";
@@ -26,19 +25,6 @@ type QuickAction = {
   icon: typeof Send;
   label: string;
   onClick?: () => void;
-};
-
-const dateFormatter = new Intl.DateTimeFormat("es-AR", {
-  day: "2-digit",
-  month: "2-digit",
-  hour: "2-digit",
-  minute: "2-digit",
-});
-
-const formatTransactionDate = (iso: string): string => {
-  const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) return "";
-  return dateFormatter.format(date);
 };
 
 export const Dashboard = () => {
@@ -208,24 +194,7 @@ export const Dashboard = () => {
         >
           <h2 className="mb-4 text-xl font-semibold">Últimos movimientos</h2>
 
-          {transactions.length === 0 ? (
-            <EmptyState
-              icon={Inbox}
-              title="Sin movimientos aún"
-              description="Tus transferencias y pagos van a aparecer acá."
-            />
-          ) : (
-            <div className="space-y-4">
-              {transactions.map((tx) => (
-                <TransactionRow
-                  key={tx.id}
-                  title={tx.title}
-                  amount={tx.amount}
-                  date={formatTransactionDate(tx.createdAt)}
-                />
-              ))}
-            </div>
-          )}
+          <TransactionHistory transactions={transactions} />
         </motion.section>
       </div>
 

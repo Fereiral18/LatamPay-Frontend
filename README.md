@@ -54,8 +54,8 @@
 
 Para levantar el proyecto localmente necesitás:
 
-- **Node.js** `>= 18.x` <!-- [COMPLETAR: confirmar versión exacta usada por el equipo] -->
-- **npm** `>= 9.x` (o el gestor que use el equipo: pnpm / yarn) <!-- [COMPLETAR] -->
+- **Node.js** `>= 18.x` (declarado en `engines` del backend)
+- **npm** `>= 9.x` (el equipo usa npm — hay `package-lock.json` en ambos repos)
 - **PostgreSQL** `>= 14` corriendo localmente, o una instancia de Railway
 - Una **cuenta de Railway** (backend + base de datos)
 - Una **cuenta de Vercel** (frontend + funciones serverless)
@@ -70,33 +70,36 @@ Para levantar el proyecto localmente necesitás:
 ### 1. Clonar el repositorio
 
 ```bash
-git clone <!-- [COMPLETAR: URL del repo en GitHub] -->
-cd latampay
+git clone <URL_DEL_REPO_GITHUB>
+cd LatamPay
 ```
+
+> El repo está dividido en dos carpetas hermanas: `LatamPay-Backend/` y `LatamPay-Frontend/`.
 
 ### 2. Backend
 
 ```bash
-cd backend
+cd LatamPay-Backend
 npm install
 
 # Copiar el archivo de ejemplo de variables de entorno y completarlo
 cp .env.example .env
 
-# Ejecutar migraciones / seed de la base de datos
-npm run migrate   # [COMPLETAR: confirmar nombre del script]
-npm run seed      # [COMPLETAR: opcional — carga de monedas iniciales]
+# Aplicar el esquema y los datos semilla en la base de datos
+# (no hay un script npm; se ejecutan los SQL directamente con psql)
+psql "$DATABASE_URL" -f sql/schema.sql
+psql "$DATABASE_URL" -f sql/seed.sql
 
-# Levantar el servidor en modo desarrollo
+# Levantar el servidor en modo desarrollo (ts-node-dev con --respawn)
 npm run dev
 ```
 
-El backend quedará disponible en `http://localhost:3000` <!-- [COMPLETAR: confirmar puerto] -->.
+El backend quedará disponible en `http://localhost:3000` (puerto por defecto definido en `src/config/index.ts`; se puede sobrescribir con la variable `PORT`).
 
 ### 3. Frontend
 
 ```bash
-cd ../frontend
+cd ../LatamPay-Frontend
 npm install
 
 # Copiar el archivo de ejemplo de variables de entorno y completarlo
@@ -110,15 +113,13 @@ El frontend quedará disponible en `http://localhost:5173` (puerto por defecto d
 
 ### 4. Funciones serverless (emails)
 
-Las funciones de envío de email viven en el directorio `/api` y se ejecutan en Vercel.
-Para probarlas localmente:
+Las funciones de envío de email se ejecutan en Vercel y viven en un **repositorio aparte** (separado del frontend y del backend). Para probarlas localmente, clonar ese repo y desde ahí:
 
 ```bash
 npm install -g vercel
+npm install
 vercel dev
 ```
-
-<!-- [COMPLETAR: confirmar la ubicación de las Vercel Functions — /api en el frontend o repo aparte] -->
 
 ---
 
@@ -136,14 +137,14 @@ FRONTEND_URL=http://localhost:5173      # usado para CORS
 DATABASE_URL=postgresql://user:password@host:port/dbname
 
 # Autenticación
-JWT_SECRET=<!-- [COMPLETAR: string secreto largo y aleatorio] -->
+JWT_SECRET=tu_string_secreto_de_al_menos_32_caracteres   # el backend valida con Zod un mínimo de 32 chars
 JWT_EXPIRES_IN=1d
 
 # Tasas de cambio
-EXCHANGERATE_API_KEY=<!-- [COMPLETAR] -->
+EXCHANGERATE_API_KEY=tu_api_key_de_exchangerate_api
 
 # Chatbot (Gemini)
-GEMINI_API_KEY=<!-- [COMPLETAR] -->
+GEMINI_API_KEY=tu_api_key_de_google_ai_studio
 ```
 
 ### Frontend (`frontend/.env`)
@@ -158,10 +159,10 @@ VITE_API_URL=http://localhost:3000
 ### Funciones serverless / AWS SES (Vercel)
 
 ```env
-AWS_ACCESS_KEY_ID=<!-- [COMPLETAR] -->
-AWS_SECRET_ACCESS_KEY=<!-- [COMPLETAR] -->
-AWS_REGION=us-east-1                      # [COMPLETAR: confirmar región de SES]
-SES_FROM_EMAIL=latampaypf@gmail.com       # [COMPLETAR: email verificado en SES]
+AWS_ACCESS_KEY_ID=tu_access_key_id_de_iam
+AWS_SECRET_ACCESS_KEY=tu_secret_access_key_de_iam
+AWS_REGION=us-east-1                      # región donde está configurado SES
+SES_FROM_EMAIL=latampaypf@gmail.com       # dirección verificada en SES (sandbox: el destinatario también debe estarlo)
 ```
 
 > ⚠️ Nunca commitees archivos `.env`. Asegurate de que estén en `.gitignore` y mantené un `.env.example` con las claves vacías como referencia.
@@ -193,8 +194,10 @@ latampay/
 │   │   ├── services/        # Llamadas al backend (axios/fetch)
 │   │   ├── context/         # Estado global (auth, etc.)
 │   │   └── main.tsx
-│   ├── api/                 # Vercel Functions (emails con AWS SES)
 │   └── .env.example
+│
+├── serverless/              # Repo aparte — Vercel Functions (emails con AWS SES)
+│   └── api/
 │
 └── README.md
 ```
@@ -214,8 +217,8 @@ Esta separación respeta el **Single Responsibility Principle** (cada capa tiene
 
 Las tasas se obtienen de **ExchangeRate-API**. Como las tasas fiat se actualizan a diario (no en tiempo real), se cachean del lado del backend para no gastar el cupo gratuito de requests y mejorar la latencia.
 
-- **Estrategia de cache**: <!-- [COMPLETAR: TTL elegido, ej. 24h / en memoria o en tabla de DB] -->
-- **Fallback ante error**: si la API no responde, se usa la última tasa conocida cacheada. <!-- [COMPLETAR: confirmar implementación] -->
+- **Estrategia de cache**: persistencia en la tabla `exchange_rates` de PostgreSQL con TTL de **12 horas**. Antes de pegarle a la API se consulta la tabla; si la última actualización es más reciente que el TTL, se devuelve ese valor; si no, se llama a la API y se hace `INSERT ... ON CONFLICT (from_currency, to_currency) DO UPDATE`.
+- **Fallback ante error**: si la API falla, se usa la última tasa conocida cacheada en `exchange_rates`. Solo se devuelve error al cliente si tampoco existe una tasa previa en la tabla.
 
 ### Emails (AWS SES)
 
@@ -241,11 +244,12 @@ CURRENCIES ||--o{ TRANSACTIONS
 
 | Tabla | Campos principales |
 | :--- | :--- |
-| **users** | `id` (PK), `email` (UNIQUE), `password_hash`, `name`, `created_at` |
-| **wallets** | `id` (PK), `user_id` (FK → users), `created_at` |
-| **currencies** | `code` (PK, ej. ARS/COP/VES), `name`, `type`, `decimals` |
-| **balances** | `id` (PK), `wallet_id` (FK), `currency_code` (FK), `amount` |
-| **transactions** | `id` (PK), `wallet_id` (FK), `type`, `from_currency`, `to_currency`, `from_amount`, `to_amount`, `exchange_rate`, `created_at` |
+| **users** | `id` (PK, UUID), `email` (UNIQUE), `password_hash`, `name`, `role` (`user`/`admin`), `created_at` |
+| **wallets** | `id` (PK, UUID), `user_id` (FK → users, UNIQUE), `cbu` (UNIQUE), `alias` (UNIQUE), `created_at` |
+| **currencies** | `code` (PK, ej. ARS/COP/VES), `name`, `type` (`fiat`/`crypto`), `decimals` |
+| **balances** | `id` (PK, UUID), `wallet_id` (FK), `currency_code` (FK), `amount` (NUMERIC(19,8), CHECK ≥ 0) |
+| **transactions** | `id` (PK, UUID), `type` (`deposit`/`withdraw`/`transfer`/`swap`), `status`, `from_wallet_id`, `to_wallet_id`, `from_currency`, `to_currency`, `from_amount`, `to_amount`, `exchange_rate`, `created_at` |
+| **exchange_rates** | `id` (PK), `from_currency` (FK), `to_currency` (FK), `rate`, `created_at`, `updated_at` — UNIQUE (`from_currency`, `to_currency`) |
 
 **Constraints e índices relevantes:**
 
@@ -254,7 +258,7 @@ CURRENCIES ||--o{ TRANSACTIONS
 - Todas las FK con `NOT NULL` donde corresponda
 - Índices sugeridos: `balances(wallet_id)`, `transactions(wallet_id, created_at)` para consultas de historial
 
-<!-- [COMPLETAR: confirmar tipo de password_hash (bcrypt), y si VES usa el código correcto del bolívar] -->
+> **Notas adicionales:** `password_hash` se guarda como `bcrypt` (`bcryptjs` con cost 10 — visible en los seeds como `$2b$10$...`). El código `VES` corresponde al **Bolívar Soberano** (ISO 4217), la moneda vigente de Venezuela. Los IDs son `UUID` generados desde la app.
 
 ---
 
@@ -293,18 +297,22 @@ Usamos **ExchangeRate-API** porque soporta las monedas latinoamericanas de la pl
 ### Backend + Base de datos → Railway
 
 1. Crear un proyecto en [Railway](https://railway.app/) y agregar un servicio **PostgreSQL**.
-2. Conectar el repositorio de GitHub y seleccionar el directorio `backend/`.
+2. Conectar el repositorio de GitHub y seleccionar el directorio `LatamPay-Backend/`.
 3. Configurar las **variables de entorno** (ver sección anterior). Railway provee `DATABASE_URL` automáticamente al vincular la base.
-4. Ejecutar migraciones en el primer deploy. <!-- [COMPLETAR: comando o configuración del release] -->
-5. URL pública del backend: <!-- [COMPLETAR: URL de Railway] -->
+4. Aplicar el esquema y los datos semilla la primera vez, conectándose a la DB de Railway con `psql`:
+   ```bash
+   psql "$DATABASE_URL" -f sql/schema.sql
+   psql "$DATABASE_URL" -f sql/seed.sql
+   ```
+5. URL pública del backend: _pendiente — completar tras el primer deploy en Railway_.
 
 ### Frontend + Funciones serverless → Vercel
 
-1. Importar el repositorio en [Vercel](https://vercel.com/) y seleccionar el directorio `frontend/`.
+1. Importar el repositorio del frontend en [Vercel](https://vercel.com/) y seleccionar `LatamPay-Frontend/`.
 2. Framework preset: **Vite**.
-3. Configurar las variables de entorno (`VITE_API_URL` apuntando al backend de Railway, y las credenciales de AWS SES para las funciones).
-4. Las funciones en `/api` se despliegan automáticamente como Vercel Functions.
-5. URL pública del frontend: <!-- [COMPLETAR: URL de Vercel] -->
+3. Configurar las variables de entorno del frontend (`VITE_API_URL` apuntando al backend de Railway).
+4. Importar **por separado** el repo de las Vercel Functions y configurar ahí las credenciales de AWS SES.
+5. URL pública del frontend: _pendiente — completar tras el primer deploy en Vercel_.
 
 > Asegurate de que el `FRONTEND_URL` del backend (CORS) coincida con la URL de Vercel en producción.
 
@@ -315,9 +323,9 @@ Usamos **ExchangeRate-API** porque soporta las monedas latinoamericanas de la pl
 Los tests están escritos con **Vitest** y cubren la lógica crítica del negocio: cálculos de balance, validaciones de transacciones y conversiones de moneda.
 
 ```bash
-cd backend
-npm run test          # corre la suite completa
-npm run test:watch    # modo watch    [COMPLETAR: confirmar scripts]
+cd LatamPay-Backend
+npm test              # modo watch (vitest por defecto)
+npm run test:run      # corre la suite completa una sola vez (útil en CI)
 ```
 
 ---

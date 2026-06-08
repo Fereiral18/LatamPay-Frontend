@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { Link, NavLink } from "react-router-dom";
-import { Menu, X, Wallet } from "lucide-react";
+import { Menu, X } from "lucide-react";
 
+import logoLatamPay from "../../assets/Logo.svg";
 import { paths } from "../../routes/paths";
 import { publicNavItems } from "../../routes/nav";
 import type { NavItem } from "../../routes/nav";
@@ -50,23 +51,14 @@ export function PublicNavbar({
         <Link
           to={paths.home}
           onClick={closeMenu}
-          className="
-            flex
-            items-center
-            gap-2
-            text-xl
-            font-bold
-            text-white
-          "
+          className="flex items-center"
+          aria-label={brand}
         >
-          <Wallet
-            size={28}
-            className="text-cyan-400"
+          <img
+            src={logoLatamPay}
+            alt={brand}
+            className="h-10 w-auto"
           />
-
-          <span>
-            {brand}
-          </span>
         </Link>
 
         {/* Desktop Menu */}

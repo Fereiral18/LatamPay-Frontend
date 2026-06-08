@@ -11,6 +11,8 @@ import {
   Wallet,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
+import { useWallet } from "../../context/WalletContext";
+import { TransactionHistory } from "../../components/transactions/TransactionHistory";
 
 type Section = "profile" | "history" | "about";
 
@@ -24,19 +26,12 @@ const sidebarLinks: {
   { id: "about", label: "Acerca de LatamPay", icon: Info },
 ];
 
-const mockHistory = [
-  { date: "2026-06-04", title: "Conversión ARS → COP", amount: "+3.080 COP" },
-  { date: "2026-06-02", title: "Transferencia recibida", amount: "+150 USD" },
-  { date: "2026-05-30", title: "Envío a Venezuela", amount: "-25 USD" },
-  { date: "2026-05-28", title: "Conversión COP → ARS", amount: "+12.500 ARS" },
-  { date: "2026-05-25", title: "Recarga de cuenta", amount: "+500 USD" },
-];
-
 const isDesktop = () =>
   typeof window !== "undefined" && window.matchMedia("(min-width: 768px)").matches;
 
 export const More = () => {
   const { user } = useAuth();
+  const { transactions } = useWallet();
 
   // null = vista de menú (solo mobile). En desktop siempre hay sección activa.
   const [section, setSection] = useState<Section | null>(() =>
@@ -219,23 +214,8 @@ export const More = () => {
                   </div>
                 </div>
 
-                <div className="mt-6 space-y-3 md:mt-8">
-                  {mockHistory.map((item) => (
-                    <div
-                      key={`${item.date}-${item.title}`}
-                      className="flex items-center justify-between gap-4 rounded-2xl border border-white/10 bg-slate-900/40 p-4 md:p-5"
-                    >
-                      <div className="min-w-0">
-                        <p className="truncate text-sm font-medium md:text-base">
-                          {item.title}
-                        </p>
-                        <p className="text-xs text-slate-400">{item.date}</p>
-                      </div>
-                      <span className="shrink-0 text-sm font-semibold text-cyan-400 md:text-base">
-                        {item.amount}
-                      </span>
-                    </div>
-                  ))}
+                <div className="mt-6 md:mt-8">
+                  <TransactionHistory transactions={transactions} />
                 </div>
               </motion.div>
             )}
