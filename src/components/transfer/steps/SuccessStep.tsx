@@ -1,16 +1,19 @@
 import { CheckCircle2 } from "lucide-react";
 import { Button } from "../../button/Button";
 import { formatAmount } from "../../../services/transfer/format";
+import type { Currency } from "../../../types/wallet/wallet.types";
 
 export type SuccessStepProps = {
   destination: string;
   amount: string;
+  currency: Currency;
   onClose: () => void;
 };
 
 export const SuccessStep = ({
   destination,
   amount,
+  currency,
   onClose,
 }: SuccessStepProps) => (
   <div className="text-center">
@@ -21,7 +24,7 @@ export const SuccessStep = ({
     <p className="mt-2 text-slate-300">
       Enviaste{" "}
       <span className="font-semibold text-emerald-400">
-        ${formatAmount(amount)}
+        ${formatAmount(amount)} {currency}
       </span>{" "}
       a <span className="font-semibold">{destination}</span>.
     </p>

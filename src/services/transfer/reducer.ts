@@ -7,6 +7,7 @@ export const initialTransferState: TransferState = {
   step: "form",
   destination: "",
   amount: "",
+  currency: "ARS",
   reason: "",
   password: "",
   showPassword: false,

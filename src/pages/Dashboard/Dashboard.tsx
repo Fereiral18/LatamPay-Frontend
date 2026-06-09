@@ -3,7 +3,6 @@ import { motion } from "framer-motion";
 import {
   ArrowLeftRight,
   ArrowDownToLine,
-  Coins,
   History,
   Send,
   TrendingUp,
@@ -11,15 +10,18 @@ import {
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useWallet } from "../../context/WalletContext";
-import { formatAmount } from "../../services/transfer/format";
 import { TransferModal } from "../../components/transfer/TransferModal";
+import { ConvertModal } from "../../components/convert/ConvertModal";
 import { DashboardSkeleton } from "../../components/dashboard/DashboardSkeleton";
-import { CurrencyCard } from "../../components/dashboard/CurrencyCard";
 import { TransactionHistory } from "../../components/transactions/TransactionHistory";
 import { Card } from "../../components/ui/Card";
-import { EmptyState } from "../../components/ui/EmptyState";
 import { ErrorState } from "../../components/ui/ErrorState";
 import { useDashboardData } from "../../hooks/useDashboardData";
+import {
+  SUPPORTED_CURRENCIES,
+  type Currency,
+} from "../../types/wallet/wallet.types";
+import { CURRENCY_META, formatBalance } from "../../utils/currency";
 
 type QuickAction = {
   icon: typeof Send;
@@ -29,35 +31,54 @@ type QuickAction = {
 
 export const Dashboard = () => {
   const { user } = useAuth();
-  const { balance, transactions } = useWallet();
+  const {
+    balances,
+    transactions,
+    isLoading: isWalletLoading,
+    error: walletError,
+    refresh: refreshWallet,
+  } = useWallet();
   const [isTransferOpen, setIsTransferOpen] = useState(false);
+  const [isConvertOpen, setIsConvertOpen] = useState(false);
+  const [selectedCurrency, setSelectedCurrency] = useState<Currency>("ARS");
   const { data, isLoading, isError, refetch } = useDashboardData();
 
   const quickActions: QuickAction[] = [
     { icon: Send, label: "Enviar", onClick: () => setIsTransferOpen(true) },
     { icon: ArrowDownToLine, label: "Recibir" },
-    { icon: ArrowLeftRight, label: "Convertir" },
+    {
+      icon: ArrowLeftRight,
+      label: "Convertir",
+      onClick: () => setIsConvertOpen(true),
+    },
     { icon: History, label: "Historial" },
   ];
 
-  if (isLoading) return <DashboardSkeleton />;
+  if (isLoading || isWalletLoading) return <DashboardSkeleton />;
 
-  if (isError || !data) {
+  if (isError || !data || walletError) {
     return (
       <section className="relative min-h-[calc(100vh-5rem)] overflow-hidden bg-slate-950 px-6 py-12 text-white">
         <div className="relative z-10 container mx-auto max-w-2xl pt-16">
           <ErrorState
-            title="No pudimos cargar tu dashboard"
-            description="Revisá tu conexión e intentá de nuevo."
-            onRetry={refetch}
+            title="No pudimos cargar tu cuenta"
+            description={walletError ?? "Revisá tu conexión e intentá de nuevo."}
+            onRetry={() => {
+              refetch();
+              void refreshWallet();
+            }}
           />
         </div>
       </section>
     );
   }
 
-  const { trend, currencies } = data;
-  const totalBalance = `$${formatAmount(String(balance))}`;
+  const { trend } = data;
+  const selectedMeta = CURRENCY_META[selectedCurrency];
+  const totalBalance = formatBalance(
+    balances[selectedCurrency] ?? 0,
+    selectedCurrency,
+  );
 
   return (
     <section className="relative min-h-[calc(100vh-5rem)] overflow-hidden bg-slate-950 px-6 py-12 text-white">
@@ -110,7 +131,12 @@ export const Dashboard = () => {
           <Card as="article" tone="highlight" padding="lg" radius="xl">
             <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
               <div>
-                <p className="text-slate-400">Balance Total</p>
+                <p className="flex items-center gap-2 text-slate-400">
+                  Balance Total
+                  <span className="rounded-full border border-cyan-500/30 bg-cyan-500/10 px-2 py-0.5 text-xs font-semibold text-cyan-300">
+                    {selectedMeta.flag} {selectedMeta.code}
+                  </span>
+                </p>
 
                 <h2 className="mt-2 text-5xl font-bold">{totalBalance}</h2>
 
@@ -163,26 +189,50 @@ export const Dashboard = () => {
           transition={{ delay: 0.35 }}
           className="mt-10"
         >
-          <h2 className="mb-4 text-xl font-semibold">Mis monedas</h2>
+          <div className="mb-4 flex items-end justify-between">
+            <h2 className="text-xl font-semibold">Mis monedas</h2>
+            <p className="text-xs text-slate-400">
+              Tocá una moneda para verla en el balance.
+            </p>
+          </div>
 
-          {currencies.length === 0 ? (
-            <EmptyState
-              icon={Coins}
-              title="Todavía no tenés monedas"
-              description="Cuando agregues fondos a tu cuenta vas a verlos acá."
-            />
-          ) : (
-            <div className="grid gap-4 md:grid-cols-3">
-              {currencies.map((item) => (
-                <CurrencyCard
-                  key={item.currency}
-                  currency={item.currency}
-                  value={item.value}
-                  valueClassName={item.color}
-                />
-              ))}
-            </div>
-          )}
+          <div className="grid gap-4 md:grid-cols-3">
+            {SUPPORTED_CURRENCIES.map((code) => {
+              const meta = CURRENCY_META[code];
+              const amount = balances[code] ?? 0;
+              const isActive = selectedCurrency === code;
+
+              return (
+                <button
+                  key={code}
+                  type="button"
+                  onClick={() => setSelectedCurrency(code)}
+                  aria-pressed={isActive}
+                  className={`group rounded-2xl border bg-white/5 p-5 text-left backdrop-blur-xl transition-all ${
+                    isActive
+                      ? "border-cyan-500/60 shadow-[0_0_30px_rgba(6,182,212,0.25)]"
+                      : "border-white/10 hover:border-cyan-500/40 hover:shadow-[0_0_30px_rgba(6,182,212,0.15)]"
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <p className="flex items-center gap-2 text-slate-300">
+                      <span className="text-xl">{meta.flag}</span>
+                      <span>{meta.code}</span>
+                    </p>
+                    {isActive && (
+                      <span className="rounded-full bg-cyan-500/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-cyan-300">
+                        Activo
+                      </span>
+                    )}
+                  </div>
+                  <p className={`mt-3 text-3xl font-bold ${meta.accentClass}`}>
+                    {formatBalance(amount, code)}
+                  </p>
+                  <p className="mt-1 text-xs text-slate-400">{meta.label}</p>
+                </button>
+              );
+            })}
+          </div>
         </motion.section>
 
         {/* Movimientos */}
@@ -201,6 +251,12 @@ export const Dashboard = () => {
       <TransferModal
         open={isTransferOpen}
         onClose={() => setIsTransferOpen(false)}
+      />
+
+      <ConvertModal
+        open={isConvertOpen}
+        onClose={() => setIsConvertOpen(false)}
+        initialFrom={selectedCurrency}
       />
     </section>
   );

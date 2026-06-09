@@ -8,10 +8,12 @@ import {
   transferReasons,
   type TransferReason,
 } from "../../../types/transfer/transfer.types";
+import type { Currency } from "../../../types/wallet/wallet.types";
 
 export type ConfirmStepProps = {
   destination: string;
   amount: string;
+  currency: Currency;
   reason: TransferReason;
   userEmail?: string;
   password: string;
@@ -24,6 +26,7 @@ export type ConfirmStepProps = {
 export const ConfirmStep = ({
   destination,
   amount,
+  currency,
   reason,
   userEmail,
   password,
@@ -54,7 +57,8 @@ export const ConfirmStep = ({
       <Card padding="sm" className="mt-5">
         <p className="text-xs text-slate-400">Monto</p>
         <p className="mt-0.5 text-3xl font-bold text-cyan-400">
-          ${formatAmount(amount)}
+          ${formatAmount(amount)}{" "}
+          <span className="text-xl text-cyan-300">{currency}</span>
         </p>
 
         <div className="mt-4 space-y-2 border-t border-white/10 pt-4 text-sm">
@@ -63,6 +67,10 @@ export const ConfirmStep = ({
             <span className="break-all text-right font-medium">
               {destination}
             </span>
+          </div>
+          <div className="flex justify-between gap-3">
+            <span className="text-slate-400">Moneda</span>
+            <span className="text-right font-medium">{currency}</span>
           </div>
           <div className="flex justify-between gap-3">
             <span className="text-slate-400">Motivo</span>
@@ -77,7 +85,7 @@ export const ConfirmStep = ({
 
       <form onSubmit={onConfirm} className="mt-5">
         <Input
-          label="Contraseña"
+          label="Contraseña de la cuenta"
           type="password"
           value={password}
           onChange={(e) => onPasswordChange(e.target.value)}
