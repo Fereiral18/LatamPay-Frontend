@@ -125,9 +125,9 @@ export function WalletProvider({ children }: WalletProviderProps) {
       const balances: CurrencyBalances = { ...EMPTY_BALANCES };
       if (wallet && Array.isArray(wallet.balances)) {
         for (const b of wallet.balances) {
-          if (isCurrency(b.currency)) {
+          if (isCurrency(b.currency_code)) {
             const n = Number(b.amount);
-            balances[b.currency] = Number.isFinite(n) ? n : 0;
+            balances[b.currency_code] = Number.isFinite(n) ? n : 0;
           }
         }
       }
