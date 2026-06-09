@@ -1,7 +1,10 @@
 import { authStorage } from "./authStorage";
 import type {
+  ApiExchangeRate,
   ApiHistory,
   ApiWallet,
+  SwapPayload,
+  SwapResult,
   TransferPayload,
   TransferResult,
 } from "../types/wallet/wallet.types";
@@ -54,4 +57,18 @@ export const apiGetHistory = (page = 1, limit = 50): Promise<ApiHistory> =>
     `/api/wallets/history?page=${page}&limit=${limit}`,
     { method: "GET" },
     "No pudimos cargar el historial.",
+  );
+
+export const apiGetRates = (): Promise<ApiExchangeRate[]> =>
+  authedFetch<ApiExchangeRate[]>(
+    "/api/exchange/rates",
+    { method: "GET" },
+    "No pudimos cargar las cotizaciones.",
+  );
+
+export const apiSwap = (payload: SwapPayload): Promise<SwapResult> =>
+  authedFetch<SwapResult>(
+    "/api/wallets/swap",
+    { method: "POST", body: JSON.stringify(payload) },
+    "No pudimos completar la conversión.",
   );

@@ -10,7 +10,9 @@ import type { ReactNode } from "react";
 import { useAuth } from "./AuthContext";
 import {
   apiGetHistory,
+  apiGetRates,
   apiGetWallet,
+  apiSwap,
   apiTransfer,
 } from "../services/wallet.api";
 import {
@@ -18,6 +20,8 @@ import {
   type ApiTransaction,
   type Currency,
   type CurrencyBalances,
+  type ExchangeRateKey,
+  type ExchangeRatesMap,
   type Transaction,
   type WalletContextValue,
 } from "../types/wallet/wallet.types";
@@ -83,6 +87,7 @@ type WalletState = {
   balance: number;
   balances: CurrencyBalances;
   transactions: Transaction[];
+  rates: ExchangeRatesMap;
   isLoading: boolean;
   error: string | null;
 };
@@ -91,9 +96,13 @@ const INITIAL_STATE: WalletState = {
   balance: 0,
   balances: { ...EMPTY_BALANCES },
   transactions: [],
+  rates: {},
   isLoading: false,
   error: null,
 };
+
+const isCurrency = (code: string): code is Currency =>
+  (SUPPORTED_CURRENCIES as string[]).includes(code);
 
 const WalletContext = createContext<WalletContextValue | null>(null);
 
@@ -108,22 +117,34 @@ export function WalletProvider({ children }: WalletProviderProps) {
   const refresh = useCallback(async () => {
     setState((s) => ({ ...s, isLoading: true, error: null }));
     try {
-      const [wallet, history] = await Promise.all([
+      const [wallet, history, ratesResponse] = await Promise.all([
         apiGetWallet(),
         apiGetHistory(1, 50),
+        apiGetRates().catch(() => [] as Awaited<ReturnType<typeof apiGetRates>>),
       ]);
       const balances: CurrencyBalances = { ...EMPTY_BALANCES };
       for (const b of wallet.balances) {
-        if ((SUPPORTED_CURRENCIES as string[]).includes(b.currency)) {
+        if (isCurrency(b.currency)) {
           const n = Number(b.amount);
-          balances[b.currency as Currency] = Number.isFinite(n) ? n : 0;
+          balances[b.currency] = Number.isFinite(n) ? n : 0;
         }
       }
       const transactions = history.transactions.map(mapTransaction);
+      const rates: ExchangeRatesMap = {};
+      for (const r of ratesResponse) {
+        if (isCurrency(r.from_currency) && isCurrency(r.to_currency)) {
+          const n = Number(r.rate);
+          if (Number.isFinite(n)) {
+            const key: ExchangeRateKey = `${r.from_currency}-${r.to_currency}`;
+            rates[key] = n;
+          }
+        }
+      }
       setState({
         balance: balances[DEFAULT_CURRENCY],
         balances,
         transactions,
+        rates,
         isLoading: false,
         error: null,
       });
@@ -184,25 +205,87 @@ export function WalletProvider({ children }: WalletProviderProps) {
     [refresh, state.balances],
   );
 
+  const getRate = useCallback(
+    (from: Currency, to: Currency): number | null => {
+      if (from === to) return 1;
+      const direct = state.rates[`${from}-${to}` as ExchangeRateKey];
+      if (typeof direct === "number" && Number.isFinite(direct)) return direct;
+      const inverse = state.rates[`${to}-${from}` as ExchangeRateKey];
+      if (typeof inverse === "number" && inverse > 0) return 1 / inverse;
+      return null;
+    },
+    [state.rates],
+  );
+
+  const swap = useCallback<WalletContextValue["swap"]>(
+    async (input) => {
+      if (!Number.isFinite(input.amount) || input.amount <= 0) {
+        return { ok: false, error: "Ingresá un monto válido." };
+      }
+      if (input.from === input.to) {
+        return { ok: false, error: "Elegí monedas distintas para convertir." };
+      }
+      if (
+        !(SUPPORTED_CURRENCIES as string[]).includes(input.from) ||
+        !(SUPPORTED_CURRENCIES as string[]).includes(input.to)
+      ) {
+        return { ok: false, error: "Moneda no soportada." };
+      }
+      const available = state.balances[input.from] ?? 0;
+      if (input.amount > available) {
+        return {
+          ok: false,
+          error: `Saldo insuficiente en ${input.from}.`,
+        };
+      }
+      try {
+        const result = await apiSwap({
+          from_currency: input.from,
+          to_currency: input.to,
+          amount: input.amount,
+        });
+        await refresh();
+        return {
+          ok: true,
+          toAmount: Number(result.toAmount),
+          rate: Number(result.rate),
+        };
+      } catch (e) {
+        const message =
+          e instanceof Error
+            ? e.message
+            : "No pudimos completar la conversión.";
+        return { ok: false, error: message };
+      }
+    },
+    [refresh, state.balances],
+  );
+
   const value = useMemo<WalletContextValue>(
     () => ({
       balance: state.balance,
       balances: state.balances,
       transactions: state.transactions,
+      rates: state.rates,
       isLoading: state.isLoading,
       error: state.error,
       canAfford,
+      getRate,
       transfer,
+      swap,
       refresh,
     }),
     [
       state.balance,
       state.balances,
       state.transactions,
+      state.rates,
       state.isLoading,
       state.error,
       canAfford,
+      getRate,
       transfer,
+      swap,
       refresh,
     ],
   );

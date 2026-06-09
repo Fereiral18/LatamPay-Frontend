@@ -62,6 +62,39 @@ export type TransferResult = {
   amount: number;
 };
 
+export type ApiExchangeRate = {
+  from_currency: string;
+  to_currency: string;
+  rate: number | string;
+  updated_at: string;
+};
+
+export type ExchangeRateKey = `${Currency}-${Currency}`;
+export type ExchangeRatesMap = Partial<Record<ExchangeRateKey, number>>;
+
+export type SwapPayload = {
+  from_currency: Currency;
+  to_currency: Currency;
+  amount: number;
+};
+
+export type SwapResult = {
+  transactionId: string;
+  fromAmount: number;
+  toAmount: number;
+  rate: number;
+};
+
+export type SwapInput = {
+  from: Currency;
+  to: Currency;
+  amount: number;
+};
+
+export type SwapOutcome =
+  | { ok: true; toAmount: number; rate: number }
+  | { ok: false; error: string };
+
 export type Transaction = {
   id: string;
   title: string;
@@ -81,11 +114,14 @@ export type WalletContextValue = {
   balance: number;
   balances: CurrencyBalances;
   transactions: Transaction[];
+  rates: ExchangeRatesMap;
   isLoading: boolean;
   error: string | null;
   canAfford: (amount: number, currency: Currency) => boolean;
+  getRate: (from: Currency, to: Currency) => number | null;
   transfer: (
     input: TransferInput,
   ) => Promise<{ ok: true } | { ok: false; error: string }>;
+  swap: (input: SwapInput) => Promise<SwapOutcome>;
   refresh: () => Promise<void>;
 };
