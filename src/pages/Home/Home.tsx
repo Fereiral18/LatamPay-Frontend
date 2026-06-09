@@ -587,12 +587,12 @@ export const Home = () => {
           Navegación
         </h4>
 
-        <ul className="space-y-3 text-slate-400">
+        <ul className="space-y-3 text-slate-400 ">
           
           <li>
             <Link
               to="/login"
-              className="hover:text-cyan-400 transition"
+              className="hover:text-cyan-400 transition text-white"
             >
               Iniciar Sesión
             </Link>
@@ -601,7 +601,7 @@ export const Home = () => {
           <li>
             <Link
               to="/register"
-              className="hover:text-cyan-400 transition"
+              className="hover:text-cyan-400 transition text-white"
             >
               Registrarse
             </Link>
