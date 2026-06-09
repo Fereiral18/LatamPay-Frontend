@@ -3,6 +3,8 @@ import type {
   ApiExchangeRate,
   ApiHistory,
   ApiWallet,
+  DepositPayload,
+  DepositResult,
   SwapPayload,
   SwapResult,
   TransferPayload,
@@ -71,4 +73,11 @@ export const apiSwap = (payload: SwapPayload): Promise<SwapResult> =>
     "/api/wallets/swap",
     { method: "POST", body: JSON.stringify(payload) },
     "No pudimos completar la conversión.",
+  );
+
+export const apiDeposit = (payload: DepositPayload): Promise<DepositResult> =>
+  authedFetch<DepositResult>(
+    "/api/wallets/deposit",
+    { method: "POST", body: JSON.stringify(payload) },
+    "No pudimos acreditar el saldo.",
   );

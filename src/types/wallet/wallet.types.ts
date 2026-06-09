@@ -95,6 +95,17 @@ export type SwapOutcome =
   | { ok: true; toAmount: number; rate: number }
   | { ok: false; error: string };
 
+export type DepositPayload = {
+  amount: number;
+  currency_code: Currency;
+};
+
+export type DepositResult = {
+  transactionId: string;
+  amount: number;
+  currency: string;
+};
+
 export type Transaction = {
   id: string;
   title: string;
