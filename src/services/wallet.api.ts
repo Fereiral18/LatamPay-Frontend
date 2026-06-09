@@ -70,7 +70,7 @@ export const apiTransfer = (
   payload: TransferPayload,
 ): Promise<TransferResult> =>
   authedFetch<TransferResult>(
-    "/api/wallets/transfer",
+    "/api/transactions/transfer",
     { method: "POST", body: JSON.stringify(payload) },
     "No pudimos completar la transferencia.",
   );
@@ -114,14 +114,14 @@ export const apiGetRates = (): Promise<ApiExchangeRate[]> =>
 
 export const apiSwap = (payload: SwapPayload): Promise<SwapResult> =>
   authedFetch<SwapResult>(
-    "/api/wallets/swap",
+    "/api/exchange/swap",
     { method: "POST", body: JSON.stringify(payload) },
     "No pudimos completar la conversión.",
   );
 
 export const apiDeposit = (payload: DepositPayload): Promise<DepositResult> =>
   authedFetch<DepositResult>(
-    "/api/wallets/deposit",
+    "/api/transactions/deposit",
     { method: "POST", body: JSON.stringify(payload) },
     "No pudimos acreditar el saldo.",
   );
