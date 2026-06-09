@@ -4,10 +4,12 @@ import {
   ArrowLeftRight,
   ArrowDownToLine,
   History,
+  Plus,
   Send,
   TrendingUp,
   Wallet,
 } from "lucide-react";
+import { toast } from "sonner";
 import { useAuth } from "../../context/AuthContext";
 import { useWallet } from "../../context/WalletContext";
 import { TransferModal } from "../../components/transfer/TransferModal";
@@ -17,11 +19,15 @@ import { TransactionHistory } from "../../components/transactions/TransactionHis
 import { Card } from "../../components/ui/Card";
 import { ErrorState } from "../../components/ui/ErrorState";
 import { useDashboardData } from "../../hooks/useDashboardData";
+import { apiDeposit } from "../../services/wallet.api";
 import {
   SUPPORTED_CURRENCIES,
   type Currency,
 } from "../../types/wallet/wallet.types";
 import { CURRENCY_META, formatBalance } from "../../utils/currency";
+
+const MOCK_DEPOSIT_AMOUNT = 10000;
+const MOCK_DEPOSIT_CURRENCY: Currency = "ARS";
 
 type QuickAction = {
   icon: typeof Send;
@@ -41,7 +47,32 @@ export const Dashboard = () => {
   const [isTransferOpen, setIsTransferOpen] = useState(false);
   const [isConvertOpen, setIsConvertOpen] = useState(false);
   const [selectedCurrency, setSelectedCurrency] = useState<Currency>("ARS");
+  const [isDepositing, setIsDepositing] = useState(false);
   const { data, isLoading, isError, refetch } = useDashboardData();
+
+  const handleMockDeposit = async () => {
+    if (isDepositing) return;
+    setIsDepositing(true);
+    const loadingId = toast.loading("Acreditando saldo...");
+    try {
+      await apiDeposit({
+        amount: MOCK_DEPOSIT_AMOUNT,
+        currency_code: MOCK_DEPOSIT_CURRENCY,
+      });
+      await refreshWallet();
+      toast.dismiss(loadingId);
+      toast.success(
+        `+${formatBalance(MOCK_DEPOSIT_AMOUNT, MOCK_DEPOSIT_CURRENCY)} acreditados.`,
+      );
+    } catch (e) {
+      toast.dismiss(loadingId);
+      toast.error(
+        e instanceof Error ? e.message : "No pudimos acreditar el saldo.",
+      );
+    } finally {
+      setIsDepositing(false);
+    }
+  };
 
   const quickActions: QuickAction[] = [
     { icon: Send, label: "Enviar", onClick: () => setIsTransferOpen(true) },
@@ -139,6 +170,16 @@ export const Dashboard = () => {
                 </p>
 
                 <h2 className="mt-2 text-5xl font-bold">{totalBalance}</h2>
+
+                <button
+                  type="button"
+                  onClick={handleMockDeposit}
+                  disabled={isDepositing}
+                  className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-300 transition hover:bg-emerald-500/20 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  <Plus size={14} />
+                  +10.000 ARS (mock)
+                </button>
 
                 <div className="mt-3 flex items-center gap-2 text-emerald-400">
                   <TrendingUp size={18} />
