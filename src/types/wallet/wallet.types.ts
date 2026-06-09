@@ -5,7 +5,7 @@ export const SUPPORTED_CURRENCIES: Currency[] = ["ARS", "COP", "VES"];
 export type CurrencyBalances = Record<Currency, number>;
 
 export type ApiBalance = {
-  currency: string;
+  currency_code: string;
   amount: number | string;
 };
 
