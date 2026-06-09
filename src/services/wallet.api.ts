@@ -60,7 +60,7 @@ export const apiGetHistory = (
   limit = 50
 ): Promise<ApiHistory> =>
   authedFetch<ApiHistory>(
-    `/api/wallets/history?page=${page}&limit=${limit}`,
+    `/api/transactions/history?page=${page}&limit=${limit}`,
     { method: "GET" },
     "No pudimos cargar el historial."
   );
