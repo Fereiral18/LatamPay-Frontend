@@ -39,8 +39,7 @@ async function authedFetch<T>(
   if (init.body && !headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
   }
-console.log("Token:", token);
-console.log("URL:", `${API_BASE}${path}`);
+
   const res = await fetch(`${API_BASE}${path}`, { ...init, headers });
   const json = (await res.json().catch(() => null)) as ApiEnvelope<T> | null;
   if (!res.ok) throw new ApiError(res.status, json?.message ?? fallback);
@@ -77,23 +76,13 @@ export const apiTransfer = (
   );
 
 
-export const apiGetHistory = (
-  page = 1,
-  limit = 50
-): Promise<ApiHistory> =>
-  authedFetch<ApiHistory>(
-    `/api/transactions/history?page=${page}&limit=${limit}`,
-    { method: "GET" },
-    "No pudimos cargar el historial."
-  );
-
 export const apiGetHistory = async (
   page = 1,
   limit = 50,
 ): Promise<ApiHistory> => {
   try {
     return await authedFetch<ApiHistory>(
-      `/api/wallets/history?page=${page}&limit=${limit}`,
+      `/api/transactions/history?page=${page}&limit=${limit}`,
       { method: "GET" },
       "No pudimos cargar el historial.",
     );
