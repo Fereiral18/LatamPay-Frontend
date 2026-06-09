@@ -30,41 +30,41 @@ async function parseJsonOrThrow<T>(response: Response, fallback: string): Promis
   return data;
 }
 
-export async function apiLogin(email: string, password: string): Promise<LoginResponse> {
-  const res = await fetch(`${API_BASE}/api/auth/login`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, password }),
-  });
-  const json = await parseJsonOrThrow<LoginResponse>(res, "No pudimos iniciar sesión.");
-  if (!json.data) throw new Error("Respuesta inválida del servidor.");
-  return json.data;
-}
+// export async function apiLogin(email: string, password: string): Promise<LoginResponse> {
+//   const res = await fetch(`${API_BASE}/api/auth/login`, {
+//     method: "POST",
+//     headers: { "Content-Type": "application/json" },
+//     body: JSON.stringify({ email, password }),
+//   });
+//   const json = await parseJsonOrThrow<LoginResponse>(res, "No pudimos iniciar sesión.");
+//   if (!json.data) throw new Error("Respuesta inválida del servidor.");
+//   return json.data;
+// }
 
 //Este ApiLogin se agrego para hacer un mock para el login, para que no exista la necesidad de hacer la base de datos local
-// export async function apiLogin(
-//   email: string,
-//   password: string,
-// ): Promise<LoginResponse> {
-//   await new Promise((resolve) => setTimeout(resolve, 500));
+export async function apiLogin(
+  email: string,
+  password: string,
+): Promise<LoginResponse> {
+  await new Promise((resolve) => setTimeout(resolve, 500));
   
-//   if (
-//     email === "admin@latampay.com" &&
-//     password === "123456Pay@"
-//   ) {
-//     return {
-//       token: "mock-token",
-//       user: {
-//         id: "1",
-//         email: "admin@latampay.com",
-//         role: "admin",
-//         name: "Latam Pay Admin User",
-//       },
-//     };
-//   }
+  if (
+    email === "admin@latampay.com" &&
+    password === "123456Pay@"
+  ) {
+    return {
+      token: "mock-token",
+      user: {
+        id: "1",
+        email: "admin@latampay.com",
+        role: "admin",
+        name: "Latam Pay Admin User",
+      },
+    };
+  }
   
-//   throw new Error("Email o contraseña incorrectos");
-// }
+  throw new Error("Email o contraseña incorrectos");
+}
 
 export async function apiRegister(name: string, email: string, password: string): Promise<void> {
   const res = await fetch(`${API_BASE}/api/auth/register`, {

@@ -82,15 +82,14 @@ export const TransferModal = ({ open, onClose }: TransferModalProps) => {
       }
 
       const amountNum = parseAmount(state.amount);
-      const success = transfer({
+      const result = await transfer({
         amount: amountNum,
         destination: state.destination,
         reason: state.reason || undefined,
       });
-      if (!success) {
-        const message = "Saldo insuficiente.";
-        dispatch({ type: "VERIFY_FAIL", payload: message });
-        toast.error(message, {
+      if (!result.ok) {
+        dispatch({ type: "VERIFY_FAIL", payload: result.error });
+        toast.error(result.error, {
           description: `Disponible: $${formatAmount(String(balance))}.`,
         });
         return;

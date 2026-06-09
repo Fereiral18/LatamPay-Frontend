@@ -29,7 +29,13 @@ type QuickAction = {
 
 export const Dashboard = () => {
   const { user } = useAuth();
-  const { balance, transactions } = useWallet();
+  const {
+    balance,
+    transactions,
+    isLoading: isWalletLoading,
+    error: walletError,
+    refresh: refreshWallet,
+  } = useWallet();
   const [isTransferOpen, setIsTransferOpen] = useState(false);
   const { data, isLoading, isError, refetch } = useDashboardData();
 
@@ -40,16 +46,19 @@ export const Dashboard = () => {
     { icon: History, label: "Historial" },
   ];
 
-  if (isLoading) return <DashboardSkeleton />;
+  if (isLoading || isWalletLoading) return <DashboardSkeleton />;
 
-  if (isError || !data) {
+  if (isError || !data || walletError) {
     return (
       <section className="relative min-h-[calc(100vh-5rem)] overflow-hidden bg-slate-950 px-6 py-12 text-white">
         <div className="relative z-10 container mx-auto max-w-2xl pt-16">
           <ErrorState
-            title="No pudimos cargar tu dashboard"
-            description="Revisá tu conexión e intentá de nuevo."
-            onRetry={refetch}
+            title="No pudimos cargar tu cuenta"
+            description={walletError ?? "Revisá tu conexión e intentá de nuevo."}
+            onRetry={() => {
+              refetch();
+              void refreshWallet();
+            }}
           />
         </div>
       </section>
