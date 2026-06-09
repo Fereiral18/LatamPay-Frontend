@@ -27,7 +27,7 @@ export type TransferModalProps = {
 
 export const TransferModal = ({ open, onClose }: TransferModalProps) => {
   const { user, verifyPassword } = useAuth();
-  const { balance, canAfford, transfer } = useWallet();
+  const { balances, canAfford, transfer } = useWallet();
   const [state, dispatch] = useReducer(transferReducer, initialTransferState);
 
   // Reset al abrir
@@ -43,6 +43,7 @@ export const TransferModal = ({ open, onClose }: TransferModalProps) => {
     const result = validateDraft({
       destination: state.destination,
       amount: state.amount,
+      currency: state.currency,
       reason: state.reason,
     });
     if (!result.ok) {
@@ -51,9 +52,10 @@ export const TransferModal = ({ open, onClose }: TransferModalProps) => {
     }
 
     const amountNum = parseAmount(state.amount);
-    if (!canAfford(amountNum)) {
-      toast.error("Saldo insuficiente.", {
-        description: `Disponible: $${formatAmount(String(balance))}.`,
+    const available = balances[state.currency] ?? 0;
+    if (!canAfford(amountNum, state.currency)) {
+      toast.error(`Saldo insuficiente en ${state.currency}.`, {
+        description: `Disponible: $${formatAmount(String(available))} ${state.currency}.`,
       });
       return;
     }
@@ -85,19 +87,21 @@ export const TransferModal = ({ open, onClose }: TransferModalProps) => {
       const result = await transfer({
         amount: amountNum,
         destination: state.destination,
+        currency: state.currency,
         reason: state.reason || undefined,
       });
       if (!result.ok) {
+        const available = balances[state.currency] ?? 0;
         dispatch({ type: "VERIFY_FAIL", payload: result.error });
         toast.error(result.error, {
-          description: `Disponible: $${formatAmount(String(balance))}.`,
+          description: `Disponible: $${formatAmount(String(available))} ${state.currency}.`,
         });
         return;
       }
 
       dispatch({ type: "VERIFY_SUCCESS" });
       toast.success(
-        `Enviaste $${formatAmount(state.amount)} a ${state.destination}.`,
+        `Enviaste $${formatAmount(state.amount)} ${state.currency} a ${state.destination}.`,
         { description: "Transferencia confirmada." },
       );
     } catch {
@@ -114,6 +118,7 @@ export const TransferModal = ({ open, onClose }: TransferModalProps) => {
         <FormStep
           destination={state.destination}
           amount={state.amount}
+          currency={state.currency}
           reason={state.reason}
           onChange={(patch) =>
             dispatch({ type: "UPDATE_FORM", payload: patch })
@@ -126,6 +131,7 @@ export const TransferModal = ({ open, onClose }: TransferModalProps) => {
         <ConfirmStep
           destination={state.destination}
           amount={state.amount}
+          currency={state.currency}
           reason={state.reason}
           userEmail={user?.email}
           password={state.password}
@@ -142,6 +148,7 @@ export const TransferModal = ({ open, onClose }: TransferModalProps) => {
         <SuccessStep
           destination={state.destination}
           amount={state.amount}
+          currency={state.currency}
           onClose={onClose}
         />
       )}

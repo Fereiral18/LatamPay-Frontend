@@ -13,10 +13,13 @@ import {
   apiGetWallet,
   apiTransfer,
 } from "../services/wallet.api";
-import type {
-  ApiTransaction,
-  Transaction,
-  WalletContextValue,
+import {
+  SUPPORTED_CURRENCIES,
+  type ApiTransaction,
+  type Currency,
+  type CurrencyBalances,
+  type Transaction,
+  type WalletContextValue,
 } from "../types/wallet/wallet.types";
 
 export type {
@@ -25,7 +28,15 @@ export type {
   WalletContextValue,
 } from "../types/wallet/wallet.types";
 
-const DEFAULT_CURRENCY = "ARS";
+const DEFAULT_CURRENCY: Currency = "ARS";
+
+const EMPTY_BALANCES: CurrencyBalances = SUPPORTED_CURRENCIES.reduce(
+  (acc, code) => {
+    acc[code] = 0;
+    return acc;
+  },
+  {} as CurrencyBalances,
+);
 
 const mapTransaction = (t: ApiTransaction): Transaction => {
   const fromAmount = Number(t.from_amount ?? 0);
@@ -70,6 +81,7 @@ const mapTransaction = (t: ApiTransaction): Transaction => {
 
 type WalletState = {
   balance: number;
+  balances: CurrencyBalances;
   transactions: Transaction[];
   isLoading: boolean;
   error: string | null;
@@ -77,6 +89,7 @@ type WalletState = {
 
 const INITIAL_STATE: WalletState = {
   balance: 0,
+  balances: { ...EMPTY_BALANCES },
   transactions: [],
   isLoading: false,
   error: null,
@@ -99,11 +112,17 @@ export function WalletProvider({ children }: WalletProviderProps) {
         apiGetWallet(),
         apiGetHistory(1, 50),
       ]);
-      const ars = wallet.balances.find((b) => b.currency === DEFAULT_CURRENCY);
-      const balance = ars ? Number(ars.amount) : 0;
+      const balances: CurrencyBalances = { ...EMPTY_BALANCES };
+      for (const b of wallet.balances) {
+        if ((SUPPORTED_CURRENCIES as string[]).includes(b.currency)) {
+          const n = Number(b.amount);
+          balances[b.currency as Currency] = Number.isFinite(n) ? n : 0;
+        }
+      }
       const transactions = history.transactions.map(mapTransaction);
       setState({
-        balance: Number.isFinite(balance) ? balance : 0,
+        balance: balances[DEFAULT_CURRENCY],
+        balances,
         transactions,
         isLoading: false,
         error: null,
@@ -124,9 +143,11 @@ export function WalletProvider({ children }: WalletProviderProps) {
   }, [isAuthenticated, refresh]);
 
   const canAfford = useCallback(
-    (amount: number) =>
-      Number.isFinite(amount) && amount > 0 && amount <= state.balance,
-    [state.balance],
+    (amount: number, currency: Currency) => {
+      const available = state.balances[currency] ?? 0;
+      return Number.isFinite(amount) && amount > 0 && amount <= available;
+    },
+    [state.balances],
   );
 
   const transfer = useCallback<WalletContextValue["transfer"]>(
@@ -134,14 +155,21 @@ export function WalletProvider({ children }: WalletProviderProps) {
       if (!Number.isFinite(input.amount) || input.amount <= 0) {
         return { ok: false, error: "Ingresá un monto válido." };
       }
-      if (input.amount > state.balance) {
-        return { ok: false, error: "Saldo insuficiente." };
+      if (!(SUPPORTED_CURRENCIES as string[]).includes(input.currency)) {
+        return { ok: false, error: "Moneda no soportada." };
+      }
+      const available = state.balances[input.currency] ?? 0;
+      if (input.amount > available) {
+        return {
+          ok: false,
+          error: `Saldo insuficiente en ${input.currency}.`,
+        };
       }
       try {
         await apiTransfer({
           to_identifier: input.destination.trim(),
           amount: input.amount,
-          currency_code: DEFAULT_CURRENCY,
+          currency_code: input.currency,
         });
         await refresh();
         return { ok: true };
@@ -153,12 +181,13 @@ export function WalletProvider({ children }: WalletProviderProps) {
         return { ok: false, error: message };
       }
     },
-    [refresh, state.balance],
+    [refresh, state.balances],
   );
 
   const value = useMemo<WalletContextValue>(
     () => ({
       balance: state.balance,
+      balances: state.balances,
       transactions: state.transactions,
       isLoading: state.isLoading,
       error: state.error,
@@ -168,6 +197,7 @@ export function WalletProvider({ children }: WalletProviderProps) {
     }),
     [
       state.balance,
+      state.balances,
       state.transactions,
       state.isLoading,
       state.error,

@@ -1,3 +1,5 @@
+import type { Currency } from "../wallet/wallet.types";
+
 export type TransferReason =
   | ""
   | "familia"
@@ -19,9 +21,16 @@ export const transferReasons: {
   { value: "otro", label: "Otro" },
 ];
 
+export const transferCurrencies: { value: Currency; label: string }[] = [
+  { value: "ARS", label: "ARS — Peso argentino" },
+  { value: "COP", label: "COP — Peso colombiano" },
+  { value: "VES", label: "VES — Bolívar venezolano" },
+];
+
 export type TransferFormFields = {
   destination: string;
   amount: string;
+  currency: Currency;
   reason: TransferReason;
 };
 

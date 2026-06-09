@@ -1,16 +1,19 @@
 import type { FormEvent } from "react";
-import { DollarSign, FileText, Send, User } from "lucide-react";
+import { Coins, DollarSign, FileText, Send, User } from "lucide-react";
 import { Input } from "../../input/Input";
 import { Button } from "../../button/Button";
 import {
+  transferCurrencies,
   transferReasons,
   type TransferFormFields,
   type TransferReason,
 } from "../../../types/transfer/transfer.types";
+import type { Currency } from "../../../types/wallet/wallet.types";
 
 export type FormStepProps = {
   destination: string;
   amount: string;
+  currency: Currency;
   reason: TransferReason;
   onChange: (patch: Partial<TransferFormFields>) => void;
   onSubmit: (e: FormEvent<HTMLFormElement>) => void;
@@ -19,6 +22,7 @@ export type FormStepProps = {
 export const FormStep = ({
   destination,
   amount,
+  currency,
   reason,
   onChange,
   onSubmit,
@@ -51,6 +55,29 @@ export const FormStep = ({
         placeholder="0.00"
         leftIcon={DollarSign}
       />
+
+      <div>
+        <label className="mb-1.5 block text-sm text-slate-300">Moneda</label>
+        <div className="relative">
+          <Coins
+            size={18}
+            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+          />
+          <select
+            value={currency}
+            onChange={(e) =>
+              onChange({ currency: e.target.value as Currency })
+            }
+            className="w-full appearance-none rounded-xl border border-white/10 bg-slate-950/60 px-4 py-3 pl-10 text-white outline-none transition focus:border-cyan-500/40"
+          >
+            {transferCurrencies.map((c) => (
+              <option key={c.value} value={c.value} className="bg-slate-900">
+                {c.label}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
 
       <div>
         <label className="mb-1.5 block text-sm text-slate-300">Motivo</label>

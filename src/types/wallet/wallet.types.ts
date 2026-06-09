@@ -1,3 +1,9 @@
+export type Currency = "ARS" | "COP" | "VES";
+
+export const SUPPORTED_CURRENCIES: Currency[] = ["ARS", "COP", "VES"];
+
+export type CurrencyBalances = Record<Currency, number>;
+
 export type ApiBalance = {
   currency: string;
   amount: number | string;
@@ -67,15 +73,17 @@ export type Transaction = {
 export type TransferInput = {
   amount: number;
   destination: string;
+  currency: Currency;
   reason?: string;
 };
 
 export type WalletContextValue = {
   balance: number;
+  balances: CurrencyBalances;
   transactions: Transaction[];
   isLoading: boolean;
   error: string | null;
-  canAfford: (amount: number) => boolean;
+  canAfford: (amount: number, currency: Currency) => boolean;
   transfer: (
     input: TransferInput,
   ) => Promise<{ ok: true } | { ok: false; error: string }>;
