@@ -123,10 +123,12 @@ export function WalletProvider({ children }: WalletProviderProps) {
         apiGetRates().catch(() => [] as Awaited<ReturnType<typeof apiGetRates>>),
       ]);
       const balances: CurrencyBalances = { ...EMPTY_BALANCES };
-      for (const b of wallet.balances) {
-        if (isCurrency(b.currency)) {
-          const n = Number(b.amount);
-          balances[b.currency] = Number.isFinite(n) ? n : 0;
+      if (wallet && Array.isArray(wallet.balances)) {
+        for (const b of wallet.balances) {
+          if (isCurrency(b.currency)) {
+            const n = Number(b.amount);
+            balances[b.currency] = Number.isFinite(n) ? n : 0;
+          }
         }
       }
       const transactions = history.transactions.map(mapTransaction);

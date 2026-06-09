@@ -19,6 +19,15 @@ type ApiEnvelope<T> = {
   data?: T;
 };
 
+export class ApiError extends Error {
+  readonly status: number;
+  constructor(status: number, message: string) {
+    super(message);
+    this.name = "ApiError";
+    this.status = status;
+  }
+}
+
 async function authedFetch<T>(
   path: string,
   init: RequestInit,
@@ -33,17 +42,29 @@ async function authedFetch<T>(
 
   const res = await fetch(`${API_BASE}${path}`, { ...init, headers });
   const json = (await res.json().catch(() => null)) as ApiEnvelope<T> | null;
-  if (!res.ok) throw new Error(json?.message ?? fallback);
-  if (!json || json.data === undefined) throw new Error(fallback);
+  if (!res.ok) throw new ApiError(res.status, json?.message ?? fallback);
+  if (!json || json.data === undefined) {
+    throw new ApiError(res.status, json?.message ?? fallback);
+  }
   return json.data;
 }
 
-export const apiGetWallet = (): Promise<ApiWallet> =>
-  authedFetch<ApiWallet>(
-    "/api/wallets/me",
-    { method: "GET" },
-    "No pudimos cargar tu billetera.",
-  );
+export const apiGetWallet = async (): Promise<ApiWallet | null> => {
+  try {
+    return await authedFetch<ApiWallet>(
+      "/api/wallets/me",
+      { method: "GET" },
+      "No pudimos cargar tu billetera.",
+    );
+  } catch (e) {
+    // Cuenta sin wallet en DB: el backend responde 404 ("Billetera no encontrada")
+    // o 200 con `data` ausente. Tratamos ambos casos como wallet vacía.
+    if (e instanceof ApiError && (e.status === 404 || e.status === 200)) {
+      return null;
+    }
+    throw e;
+  }
+};
 
 export const apiTransfer = (
   payload: TransferPayload,
@@ -54,12 +75,33 @@ export const apiTransfer = (
     "No pudimos completar la transferencia.",
   );
 
-export const apiGetHistory = (page = 1, limit = 50): Promise<ApiHistory> =>
-  authedFetch<ApiHistory>(
-    `/api/wallets/history?page=${page}&limit=${limit}`,
-    { method: "GET" },
-    "No pudimos cargar el historial.",
-  );
+export const apiGetHistory = async (
+  page = 1,
+  limit = 50,
+): Promise<ApiHistory> => {
+  try {
+    return await authedFetch<ApiHistory>(
+      `/api/wallets/history?page=${page}&limit=${limit}`,
+      { method: "GET" },
+      "No pudimos cargar el historial.",
+    );
+  } catch (e) {
+    // Cuenta sin wallet en DB: el backend responde 404.
+    // Devolvemos historial vacío para no romper el dashboard.
+    if (e instanceof ApiError && e.status === 404) {
+      return {
+        transactions: [],
+        pagination: {
+          totalItems: 0,
+          totalPages: 0,
+          currentPage: page,
+          limit,
+        },
+      };
+    }
+    throw e;
+  }
+};
 
 export const apiGetRates = (): Promise<ApiExchangeRate[]> =>
   authedFetch<ApiExchangeRate[]>(
