@@ -1,7 +1,14 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Eye, EyeOff, ShieldCheck, Wallet, TrendingUp, Users } from "lucide-react";
+import {
+  Eye,
+  EyeOff,
+  ShieldCheck,
+  Wallet,
+  TrendingUp,
+  Users,
+} from "lucide-react";
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -77,7 +84,7 @@ export const Login = () => {
         <motion.div
           initial={{ opacity: 0, y: 50 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex justify-center"
+          className="order-2 flex justify-center lg:order-1"
         >
           <div className="w-full max-w-md rounded-3xl border border-cyan-500/20 bg-white/5 p-8 backdrop-blur-xl">
             <h2 className="text-2xl font-bold">Inicia sesión</h2>
@@ -155,6 +162,7 @@ export const Login = () => {
         <motion.div
           initial={{ opacity: 0, x: 40 }}
           animate={{ opacity: 1, x: 0 }}
+          className="order-1 lg:order-2"
         >
           <div className="inline-flex items-center gap-2 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-4 py-2 text-sm text-cyan-400 backdrop-blur-md">
             <Wallet size={16} />
