@@ -72,7 +72,7 @@ export const Login = () => {
         />
       </div>
 
-      <div className="relative z-10 container mx-auto grid min-h-screen items-center gap-10 px-8 pb-16 lg:grid-cols-2">
+      <div className="relative z-10 mt-5 container mx-auto grid min-h-screen items-center gap-10 px-8 pb-16 lg:grid-cols-2">
         {/* LEFT FORM */}
         <motion.div
           initial={{ opacity: 0, y: 50 }}

@@ -69,7 +69,7 @@ export const Register = () => {
         />
       </div>
 
-      <div className="relative z-10 container mx-auto grid min-h-screen items-center gap-10 px-8 pb-16 lg:grid-cols-2">
+      <div className="relative z-10 mt-10 container mx-auto grid min-h-screen items-center gap-10 px-8 pb-16 lg:grid-cols-2">
 
         {/* LEFT */}
         <motion.div
