@@ -66,19 +66,32 @@ exit={{
   y: window.innerWidth >= 640 ? 30 : 100,
 }}
             transition={{ duration: 0.25 }}
-            className="
+ className="
   fixed z-50
-  w-full sm:w-[92%] sm:max-w-lg
-  bottom-0 left-0
-  sm:left-1/2 sm:top-1/2
-  sm:-translate-x-1/2 sm:-translate-y-1/2
+  w-full
+  sm:w-[92%]
+  sm:max-w-lg
+
+  bottom-0
+  left-0
+
+  sm:bottom-auto
+  sm:left-1/2
+  sm:top-1/2
+
+  sm:-translate-x-1/2
+  sm:-translate-y-1/2
 "
           >
-            <div className="
+            <div  className="
     max-h-[90vh]
     overflow-y-auto
+    sm:max-h-none
+    sm:overflow-visible
+
     rounded-t-[2rem]
     sm:rounded-3xl
+
     border border-white/10
     bg-slate-950/95
     backdrop-blur-2xl
