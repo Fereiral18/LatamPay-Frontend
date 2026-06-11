@@ -1,8 +1,10 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   ArrowLeftRight,
   ArrowDownToLine,
+  ArrowRight,
   History,
   Plus,
   Send,
@@ -10,6 +12,7 @@ import {
   Wallet,
 } from "lucide-react";
 import { toast } from "sonner";
+import { paths } from "../../routes/paths";
 import { useAuth } from "../../context/AuthContext";
 import { useWallet } from "../../context/WalletContext";
 import { TransferModal } from "../../components/transfer/TransferModal";
@@ -298,9 +301,24 @@ export const Dashboard = () => {
           transition={{ delay: 0.45 }}
           className="mt-10"
         >
-          <h2 className="mb-4 text-xl font-semibold">Últimos movimientos</h2>
+          <div className="mb-4 flex items-end justify-between">
+            <h2 className="text-xl font-semibold">Últimos movimientos</h2>
+            <p className="text-xs text-slate-400">Mostrando los 5 más recientes.</p>
+          </div>
 
-          <TransactionHistory transactions={transactions} />
+          <TransactionHistory transactions={transactions} limit={5} />
+
+          {transactions.length > 0 && (
+            <div className="mt-5 flex justify-center">
+              <Link
+                to={`${paths.more}?section=history`}
+                className="inline-flex items-center gap-2 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-5 py-2.5 text-sm font-medium text-cyan-300 transition hover:border-cyan-400/60 hover:bg-cyan-500/15 hover:shadow-[0_0_20px_rgba(6,182,212,0.2)]"
+              >
+                Ver todos los movimientos
+                <ArrowRight size={16} />
+              </Link>
+            </div>
+          )}
         </motion.section>
       </div>
 
