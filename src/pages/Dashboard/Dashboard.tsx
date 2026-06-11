@@ -29,6 +29,7 @@ import {
   type Currency,
 } from "../../types/wallet/wallet.types";
 import { CURRENCY_META, formatBalance } from "../../utils/currency";
+import { ReceiveModal } from "../../components/receiveModal/ReceiveModal";
 
 const MOCK_DEPOSIT_AMOUNT = 10000;
 const MOCK_DEPOSIT_CURRENCY: Currency = "ARS";
@@ -41,14 +42,17 @@ type QuickAction = {
 
 export const Dashboard = () => {
   const { user } = useAuth();
-  const {
-    balances,
-    transactions,
-    isLoading: isWalletLoading,
-    error: walletError,
-    refresh: refreshWallet,
-  } = useWallet();
+const {
+  balances,
+  transactions,
+  cbu,
+  alias,
+  isLoading: isWalletLoading,
+  error: walletError,
+  refresh: refreshWallet,
+} = useWallet();
   const [isTransferOpen, setIsTransferOpen] = useState(false);
+  const [isReceiveOpen, setIsReceiveOpen] = useState(false);
   const [isConvertOpen, setIsConvertOpen] = useState(false);
   const [selectedCurrency, setSelectedCurrency] = useState<Currency>("ARS");
   const [isDepositing, setIsDepositing] = useState(false);
@@ -80,7 +84,11 @@ export const Dashboard = () => {
 
   const quickActions: QuickAction[] = [
     { icon: Send, label: "Enviar", onClick: () => setIsTransferOpen(true) },
-    { icon: ArrowDownToLine, label: "Recibir" },
+    {
+      icon: ArrowDownToLine,
+      label: "Recibir",
+      onClick: () => setIsReceiveOpen(true),
+    },
     {
       icon: ArrowLeftRight,
       label: "Convertir",
@@ -97,7 +105,9 @@ export const Dashboard = () => {
         <div className="relative z-10 container mx-auto max-w-2xl pt-16">
           <ErrorState
             title="No pudimos cargar tu cuenta"
-            description={walletError ?? "Revisá tu conexión e intentá de nuevo."}
+            description={
+              walletError ?? "Revisá tu conexión e intentá de nuevo."
+            }
             onRetry={() => {
               refetch();
               void refreshWallet();
@@ -289,7 +299,9 @@ export const Dashboard = () => {
         >
           <div className="mb-4 flex items-end justify-between">
             <h2 className="text-xl font-semibold">Cotizaciones en vivo</h2>
-            <p className="text-xs text-slate-400">Datos sincronizados desde el backend.</p>
+            <p className="text-xs text-slate-400">
+              Datos sincronizados desde el backend.
+            </p>
           </div>
           <LiveRatesGrid variant="detailed" />
         </motion.section>
@@ -303,7 +315,9 @@ export const Dashboard = () => {
         >
           <div className="mb-4 flex items-end justify-between">
             <h2 className="text-xl font-semibold">Últimos movimientos</h2>
-            <p className="text-xs text-slate-400">Mostrando los 5 más recientes.</p>
+            <p className="text-xs text-slate-400">
+              Mostrando los 5 más recientes.
+            </p>
           </div>
 
           <TransactionHistory transactions={transactions} limit={5} />
@@ -326,6 +340,12 @@ export const Dashboard = () => {
         open={isTransferOpen}
         onClose={() => setIsTransferOpen(false)}
       />
+      <ReceiveModal
+  open={isReceiveOpen}
+  onClose={() => setIsReceiveOpen(false)}
+  alias={alias}
+  cbu={cbu}
+/>
 
       <ConvertModal
         open={isConvertOpen}
