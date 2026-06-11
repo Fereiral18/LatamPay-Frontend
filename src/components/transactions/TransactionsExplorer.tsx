@@ -109,10 +109,11 @@ export const TransactionsExplorer = ({
   const start = (currentPage - 1) * PAGE_SIZE;
   const paged = filtered.slice(start, start + PAGE_SIZE);
 
-  const handleFilterChange = <T,>(setter: (v: T) => void) => (value: T) => {
-    setter(value);
-    setPage(1);
-  };
+  const handleFilterChange =
+    (setter: (v: string) => void) => (value: string) => {
+      setter(value);
+      setPage(1);
+    };
 
   const pageNumbers = Array.from({ length: totalPages }, (_, i) => i + 1);
 
@@ -127,7 +128,7 @@ export const TransactionsExplorer = ({
           <FilterSelect
             label="Acción"
             value={actionFilter}
-            onChange={handleFilterChange<ActionFilter>((v) =>
+            onChange={handleFilterChange((v) =>
               setActionFilter(v as ActionFilter),
             )}
             options={actionOptions}
@@ -135,7 +136,7 @@ export const TransactionsExplorer = ({
           <FilterSelect
             label="Fecha"
             value={dateFilter}
-            onChange={handleFilterChange<DateFilter>((v) =>
+            onChange={handleFilterChange((v) =>
               setDateFilter(v as DateFilter),
             )}
             options={dateOptions}
@@ -143,7 +144,7 @@ export const TransactionsExplorer = ({
           <FilterSelect
             label="Monto"
             value={amountFilter}
-            onChange={handleFilterChange<AmountFilter>((v) =>
+            onChange={handleFilterChange((v) =>
               setAmountFilter(v as AmountFilter),
             )}
             options={amountOptions}
