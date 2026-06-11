@@ -16,6 +16,7 @@ import { TransferModal } from "../../components/transfer/TransferModal";
 import { ConvertModal } from "../../components/convert/ConvertModal";
 import { DashboardSkeleton } from "../../components/dashboard/DashboardSkeleton";
 import { TransactionHistory } from "../../components/transactions/TransactionHistory";
+import { LiveRatesGrid } from "../../components/exchange/LiveRatesGrid";
 import { Card } from "../../components/ui/Card";
 import { ErrorState } from "../../components/ui/ErrorState";
 import { useDashboardData } from "../../hooks/useDashboardData";
@@ -274,6 +275,20 @@ export const Dashboard = () => {
               );
             })}
           </div>
+        </motion.section>
+
+        {/* Cotizaciones en vivo */}
+        <motion.section
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.4 }}
+          className="mt-10"
+        >
+          <div className="mb-4 flex items-end justify-between">
+            <h2 className="text-xl font-semibold">Cotizaciones en vivo</h2>
+            <p className="text-xs text-slate-400">Datos sincronizados desde el backend.</p>
+          </div>
+          <LiveRatesGrid variant="detailed" />
         </motion.section>
 
         {/* Movimientos */}
