@@ -88,6 +88,8 @@ type WalletState = {
   balances: CurrencyBalances;
   transactions: Transaction[];
   rates: ExchangeRatesMap;
+  cbu: string | null;
+  alias: string | null;
   isLoading: boolean;
   error: string | null;
 };
@@ -97,6 +99,8 @@ const INITIAL_STATE: WalletState = {
   balances: { ...EMPTY_BALANCES },
   transactions: [],
   rates: {},
+  cbu: null,
+  alias: null,
   isLoading: false,
   error: null,
 };
@@ -147,6 +151,8 @@ export function WalletProvider({ children }: WalletProviderProps) {
         balances,
         transactions,
         rates,
+        cbu: wallet?.cbu ?? null,
+        alias: wallet?.alias ?? null,
         isLoading: false,
         error: null,
       });
@@ -269,6 +275,8 @@ export function WalletProvider({ children }: WalletProviderProps) {
       balances: state.balances,
       transactions: state.transactions,
       rates: state.rates,
+      cbu: state.cbu,
+      alias: state.alias,
       isLoading: state.isLoading,
       error: state.error,
       canAfford,
@@ -282,6 +290,8 @@ export function WalletProvider({ children }: WalletProviderProps) {
       state.balances,
       state.transactions,
       state.rates,
+      state.cbu,
+      state.alias,
       state.isLoading,
       state.error,
       canAfford,
