@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   ArrowLeft,
@@ -16,6 +17,11 @@ import { TransactionHistory } from "../../components/transactions/TransactionHis
 
 type Section = "profile" | "history" | "about";
 
+const VALID_SECTIONS: Section[] = ["profile", "history", "about"];
+
+const parseSection = (value: string | null): Section | null =>
+  value && (VALID_SECTIONS as string[]).includes(value) ? (value as Section) : null;
+
 const sidebarLinks: {
   id: Section;
   label: string;
@@ -32,11 +38,15 @@ const isDesktop = () =>
 export const More = () => {
   const { user } = useAuth();
   const { transactions } = useWallet();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   // null = vista de menú (solo mobile). En desktop siempre hay sección activa.
-  const [section, setSection] = useState<Section | null>(() =>
-    isDesktop() ? "profile" : null,
-  );
+  // Prioridad inicial: ?section=... > default desktop ("profile") > null en mobile.
+  const [section, setSection] = useState<Section | null>(() => {
+    const fromUrl = parseSection(searchParams.get("section"));
+    if (fromUrl) return fromUrl;
+    return isDesktop() ? "profile" : null;
+  });
 
   // Si el viewport cambia a desktop y no hay sección, seleccionamos la primera.
   useEffect(() => {
@@ -47,6 +57,21 @@ export const More = () => {
     mql.addEventListener("change", onChange);
     return () => mql.removeEventListener("change", onChange);
   }, [section]);
+
+  // Si la URL cambia mientras estamos en la página, sincronizamos.
+  useEffect(() => {
+    const fromUrl = parseSection(searchParams.get("section"));
+    if (fromUrl && fromUrl !== section) setSection(fromUrl);
+  }, [searchParams, section]);
+
+  const handleSelectSection = (next: Section) => {
+    setSection(next);
+    if (searchParams.get("section") !== next) {
+      const params = new URLSearchParams(searchParams);
+      params.set("section", next);
+      setSearchParams(params, { replace: true });
+    }
+  };
 
   const activeLink = sidebarLinks.find((l) => l.id === section);
 
@@ -104,7 +129,7 @@ export const More = () => {
                     <li key={link.id}>
                       <button
                         type="button"
-                        onClick={() => setSection(link.id)}
+                        onClick={() => handleSelectSection(link.id)}
                         className={`flex w-full items-center justify-between gap-3 rounded-2xl px-4 py-4 text-left transition-all md:py-3 ${
                           isActive
                             ? "border border-cyan-500/30 bg-cyan-500/10 text-cyan-300 shadow-[0_0_20px_rgba(6,182,212,0.15)]"

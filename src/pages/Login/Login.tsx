@@ -16,17 +16,12 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useAuth } from "../../context/AuthContext";
 import { paths } from "../../routes/paths";
 import { loginSchema } from "../../schemas/login.schema";
+import { LiveRatesGrid } from "../../components/exchange/LiveRatesGrid";
 
 type LoginFormData = {
   email: string;
   password: string;
 };
-
-const quotes = [
-  { pair: "ARS / COP", value: "$3,08" },
-  { pair: "VES / ARS", value: "$26,00" },
-  { pair: "VES / COP", value: "$80,00" },
-];
 
 export const Login = () => {
   const { login } = useAuth();
@@ -177,21 +172,11 @@ export const Login = () => {
           </h1>
 
           <p className="mt-6 max-w-md text-lg text-slate-300">
-            Accedé a tu wallet y gestioná pesos argentinos, dólares y reales
-            desde una sola plataforma.
+            Accedé a tu wallet y gestioná pesos argentinos, colombianos y
+            bolívares venezolanos desde una sola plataforma.
           </p>
 
-          <div className="mt-8 flex flex-wrap gap-4">
-            {quotes.map((item) => (
-              <div
-                key={item.pair}
-                className="rounded-xl border border-white/10 bg-white/5 p-4 backdrop-blur-xl"
-              >
-                <p className="text-xs text-slate-400">{item.pair}</p>
-                <p className="mt-1 text-xl font-bold">{item.value}</p>
-              </div>
-            ))}
-          </div>
+          <LiveRatesGrid className="mt-8" />
 
           <div className="mt-12 flex flex-wrap gap-10">
             <div>
