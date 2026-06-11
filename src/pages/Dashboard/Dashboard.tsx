@@ -343,8 +343,8 @@ export const Dashboard = () => {
       <ReceiveModal
         open={isReceiveOpen}
         onClose={() => setIsReceiveOpen(false)}
-        alias={alias}
-        cbu={cbu}
+        alias={alias ?? undefined}
+        cbu={cbu ?? undefined}
       />
 
       <ConvertModal
