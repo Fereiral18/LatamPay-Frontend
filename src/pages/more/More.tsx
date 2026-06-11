@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useWallet } from "../../context/WalletContext";
-import { TransactionHistory } from "../../components/transactions/TransactionHistory";
+import { TransactionsExplorer } from "../../components/transactions/TransactionsExplorer";
 
 type Section = "profile" | "history" | "about";
 
@@ -281,7 +281,7 @@ export const More = () => {
                 </div>
 
                 <div className="mt-6 md:mt-8">
-                  <TransactionHistory transactions={transactions} />
+                  <TransactionsExplorer transactions={transactions} />
                 </div>
               </motion.div>
             )}

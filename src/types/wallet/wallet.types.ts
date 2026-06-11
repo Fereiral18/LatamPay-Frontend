@@ -106,10 +106,19 @@ export type DepositResult = {
   currency: string;
 };
 
+export type TransactionKind =
+  | "transfer_sent"
+  | "transfer_received"
+  | "deposit"
+  | "withdraw"
+  | "swap"
+  | "other";
+
 export type Transaction = {
   id: string;
   title: string;
   amount: number;
+  kind: TransactionKind;
   reason?: string;
   createdAt: string;
 };
